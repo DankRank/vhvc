@@ -53,6 +53,8 @@ namespace vhvc::ppu {
 		PPUADDR,
 		PPUDATA,
 	};
+	void poweron();
+	void reset();
 	void do_cycle();
 	uint8_t reg_read(int reg);
 	void reg_write(int reg, uint8_t data);

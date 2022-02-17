@@ -13,6 +13,9 @@ namespace vhvc {
 		inspect_lock& operator=(const inspect_lock&) = delete;
 	};
 
+	void bus_poweron();
+	void bus_reset();
+
 	extern uint8_t cpu_ram[2048];
 	uint8_t cpu_read(uint16_t addr);
 	void cpu_write(uint16_t addr, uint8_t data);

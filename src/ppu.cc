@@ -52,7 +52,6 @@ uint64_t bg_shiftreg = 0;
 // |+-------- sprite zero
 // +--------- priority
 uint8_t obj_out[256] = { 0 };
-
 uint32_t palette_to_rgb(uint8_t data) {
 	if (grayscale)
 		data &= 0x30;
@@ -68,6 +67,26 @@ void palette_write(int entry, uint8_t data) {
 		rgb_palette[entry & 0x0F] = rgb_palette[entry | 0x10] = palette_to_rgb(data);
 	}
 }
+void poweron() {
+	reset();
+	oamaddr = 0;
+	v = 0;
+	for (int i = 0; i < 32; i++)
+		palette_write(i, 0);
+	memset(oam, 0xFF, 256);
+}
+void reset() {
+	vertical_increment = obj_pattern = bg_pattern = obj_size = nmi_enabled = false;
+	grayscale = bg_left = obj_left = bg_enable = obj_enable = false;
+	emphasis = 0;
+	t = x_fine = 0;
+	write_latch = false;
+	odd_frame = false;
+	line = dot = 0;
+	read_buffer = 0;
+	// TODO: implement warm-up?
+}
+
 static void do_oam_eval_write_cycle() {
 	// FIXME: this is terrible
 	// FIXME: junk sprites should be replaced with transparent data

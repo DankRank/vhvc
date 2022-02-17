@@ -6,6 +6,18 @@
 #include "mapper.hh"
 namespace vhvc {
 bool bus_inspect = false;
+void bus_poweron() {
+	cpu::poweron();
+	ppu::poweron();
+	mapper->poweron();
+	memset(cpu_ram, 0xFF, 2048);
+	memset(ppu_ram, 0xFF, 2048);
+}
+void bus_reset() {
+	cpu::reset();
+	ppu::reset();
+	mapper->reset();
+}
 uint8_t cpu_ram[2048] = {};
 uint32_t cpu_cycle = 0; // TODO: probably should be a part of APU
 bool oam_dma = false;

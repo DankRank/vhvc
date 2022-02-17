@@ -43,11 +43,8 @@ void set_nmi(bool state) {
 void poweron() {
 	a = x = y = s = 0;
 	C = Z = D = V = N = false;
-	I = true;
 	pc = 0; // set pc to some sane value for first two accesses
-	nmi = false;
-	resetting = true;
-	jammed = false;
+	reset();
 }
 void reset() {
 	I = true;

@@ -31,14 +31,15 @@ void events() {
 		handle_input(&ev);
 		if (ev.type == SDL_KEYDOWN && ev.key.keysym.scancode == SDL_SCANCODE_PAUSE)
 			run_cpu = !run_cpu;
+		if (ev.type == SDL_KEYDOWN && ev.key.keysym.scancode == SDL_SCANCODE_R && ev.key.keysym.mod & KMOD_CTRL)
+			bus_reset();
 		if (ev.type == SDL_DROPFILE) {
 			File f = File::fromFile(ev.drop.file, "rb");
 			if (f) {
 				std::vector<uint8_t> buf;
 				if (f.readInto(buf)) {
 					load_rom(buf);
-					cpu::poweron();
-					mapper->poweron();
+					bus_poweron();
 				}
 			}
 			SDL_free(ev.drop.file);
@@ -69,8 +70,7 @@ void events() {
 					std::vector<uint8_t> buf;
 					if (f.readInto(buf)) {
 						load_rom(buf);
-						cpu::poweron();
-						mapper->poweron();
+						bus_poweron();
 					}
 				}
 			}
@@ -87,9 +87,10 @@ void events() {
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("File")) {
 			ImGui::MenuItem("Open", nullptr, &show_file_input);
-			if (ImGui::MenuItem("Exit")) {
+			if (ImGui::MenuItem("Reset"))
+				bus_reset();
+			if (ImGui::MenuItem("Exit"))
 				is_running = false;
-			}
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("CPU")) {
@@ -148,8 +149,7 @@ int main(int argc, char** argv)
 					load_rom(buf);
 					cpudebug::is_debugging = true;
 					cpudebug::nestest = true;
-					cpu::poweron();
-					mapper->poweron();
+					bus_poweron();
 					cpu::step(8992);
 				}
 			}
@@ -164,8 +164,7 @@ int main(int argc, char** argv)
 			if (f.readInto(buf))
 				load_rom(buf);
 		}
-		cpu::poweron();
-		mapper->poweron();
+		bus_poweron();
 	}
 
 	SDL_SetHint(SDL_HINT_GAMECONTROLLERCONFIG_FILE, "controller_map.txt");
