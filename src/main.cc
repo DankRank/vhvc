@@ -8,6 +8,7 @@
 #include "nesfile.hh"
 #include "mapper.hh"
 #include "palette.hh"
+#include "audio.hh"
 
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
@@ -91,6 +92,25 @@ void events() {
 				bus_reset();
 			if (ImGui::MenuItem("Exit"))
 				is_running = false;
+			if (ImGui::MenuItem("beep")) {
+				int16_t s;
+				for (int i = 0; i < 1000; i++) {
+					s = 1000;
+					audio::enqueue(s);
+					audio::enqueue(s);
+					audio::enqueue(s);
+					audio::enqueue(s);
+					audio::enqueue(s);
+					audio::enqueue(s);
+					s = -1000;
+					audio::enqueue(s);
+					audio::enqueue(s);
+					audio::enqueue(s);
+					audio::enqueue(s);
+					audio::enqueue(s);
+					audio::enqueue(s);
+				}
+			}
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("CPU")) {
@@ -134,6 +154,7 @@ void events() {
 		//while (now - start > 16)
 		//	start += 16;
 	//}
+	audio::flip();
 }
 int main(int argc, char** argv)
 {
@@ -184,6 +205,9 @@ int main(int argc, char** argv)
 		fprintf(stderr, "SDL_CreateRenderer: %s\n", SDL_GetError());
 		return 1;
 	}
+
+	if (!audio::init())
+		return 1;
 
 	if (!ppudebug::init(renderer)) {
 		return 1;

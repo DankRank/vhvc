@@ -13,6 +13,8 @@ namespace vhvc {
 		inspect_lock& operator=(const inspect_lock&) = delete;
 	};
 
+	void set_irq_internal(bool state);
+	void set_irq(bool state);
 	void bus_poweron();
 	void bus_reset();
 

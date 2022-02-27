@@ -4,11 +4,24 @@
 #include "input.hh"
 #include "ppu.hh"
 #include "mapper.hh"
+#include "apu.hh"
 namespace vhvc {
 bool bus_inspect = false;
+bool irq_internal = false;
+bool irq_external = false;
+void set_irq_internal(bool state) {
+	irq_internal = state;
+	cpu::irq = irq_internal || irq_external;
+}
+void set_irq(bool state) {
+	irq_external = state;
+	cpu::irq = irq_internal || irq_external;
+}
 void bus_poweron() {
 	cpu::poweron();
 	ppu::poweron();
+	set_irq_internal(false);
+	set_irq(false);
 	mapper->poweron();
 	memset(cpu_ram, 0xFF, 2048);
 	memset(ppu_ram, 0xFF, 2048);
@@ -28,6 +41,7 @@ uint8_t cpu_read_basic(uint16_t addr) {
 	} else if ((addr & 0xE000) == 0x2000) {
 		return ppu::reg_read(addr & 7);
 	} else if (addr == 0x4015) {
+		return apu::read_4015();
 	} else if (addr == 0x4016) {
 		return bus_inspect ? cpu::data_bus : read_4016() & 0x1F | cpu::data_bus & 0xE0;
 	} else if (addr == 0x4017) {
@@ -43,6 +57,7 @@ uint8_t cpu_read(uint16_t addr) {
 		ppu::do_cycle();
 		ppu::do_cycle();
 		ppu::do_cycle();
+		apu::do_cycle();
 		if (oam_dma) {
 			// TODO: this will need to be adjusted for DMC DMA
 			oam_dma = false;
@@ -64,7 +79,7 @@ void cpu_write(uint16_t addr, uint8_t data) {
 	} else if ((addr & 0xE000) == 0x2000) {
 		ppu::reg_write(addr & 7, data);
 	} else if ((addr & 0xFFE0) == 0x4000) {
-		//apu
+		apu::reg_write(addr, data);
 		if (addr == 0x4014) {
 			oam_dma = true;
 			oam_dma_page = data;
@@ -80,6 +95,7 @@ void cpu_write(uint16_t addr, uint8_t data) {
 		ppu::do_cycle();
 		ppu::do_cycle();
 		ppu::do_cycle();
+		apu::do_cycle();
 		cpu_cycle++;
 	}
 }

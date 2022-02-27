@@ -15,6 +15,8 @@ add_executable(vhvc
 	src/span.hh
 	src/io.hh
 	src/palette.cc src/palette.hh
+	src/apu.cc src/apu.hh
+	src/audio.cc src/audio.hh
 )
 target_include_directories(vhvc PRIVATE ${SDL2_INCLUDE_DIRS} extlib/imgui extlib/imgui/backends)
 target_link_libraries(vhvc PRIVATE ${SDL2_LIBRARIES})

@@ -436,7 +436,7 @@ struct MMC3 : BasicMapper {
 		if (!ppu_a12_d3 && !ppu_a12_d2 && !ppu_a12_d1 && ppu_a12) {
 			if (irq_reload || irq_counter == 0) {
 				if (!irq_reload)
-					cpu::irq = true;
+					set_irq(true);
 				irq_counter = irq_latch;
 				irq_reload = false;
 			} else {
@@ -474,7 +474,7 @@ struct MMC3 : BasicMapper {
 			break;
 		case 0xC000: irq_latch = data; break;
 		case 0xC001: irq_reload = true; break;
-		case 0xE000: cpu::irq = irq_enabled = false; break;
+		case 0xE000: irq_enabled = false; set_irq(true); break;
 		case 0xE001: irq_enabled = true; break;
 		}
 	}
