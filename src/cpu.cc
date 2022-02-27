@@ -212,7 +212,7 @@ jam:
 		case 0xA0: LOAD_IMM();  LDi(y); break; // LDY imm
 		case 0xA4: LOAD_ZP();   LDi(y); break; // LDY zp
 		case 0xAC: LOAD_ABS();  LDi(y); break; // LDY abs
-		case 0xB4: LOAD_ZPi(x); LDi(y); break; // LDY zpy
+		case 0xB4: LOAD_ZPi(x); LDi(y); break; // LDY zpx
 		case 0xBC: LOAD_ABi(x); LDi(y); break; // LDY abx
 		case 0xA2: LOAD_IMM();  LDi(x); break; // LDX imm
 		case 0xA6: LOAD_ZP();   LDi(x); break; // LDX zp
