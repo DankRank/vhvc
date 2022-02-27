@@ -1,8 +1,6 @@
 #ifndef VHVC_INPUT
 #define VHVC_INPUT
-#include <SDL.h>
-#include <stdint.h>
-
+#include "common.hh"
 namespace vhvc {
 	struct Joy {
 		uint8_t state = 0;

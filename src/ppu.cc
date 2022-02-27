@@ -1,6 +1,5 @@
-#include <string.h>
-#include "palette.hh"
 #include "ppu.hh"
+#include "palette.hh"
 #include "ppudebug.hh"
 #include "bus.hh"
 namespace vhvc {

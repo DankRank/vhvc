@@ -1,6 +1,6 @@
 #ifndef VHVC_CPU
 #define VHVC_CPU
-#include <stdint.h>
+#include "common.hh"
 namespace vhvc::cpu {
 	extern uint8_t a;
 	extern uint8_t x;

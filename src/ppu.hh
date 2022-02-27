@@ -1,6 +1,6 @@
 #ifndef VHVC_PPU
 #define VHVC_PPU
-#include <stdint.h>
+#include "common.hh"
 namespace vhvc::ppu {
 	extern uint8_t iobus ;
 	extern bool vertical_increment;

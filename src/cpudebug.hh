@@ -1,5 +1,6 @@
 #ifndef VHVC_CPUDEBUG
 #define VHVC_CPUDEBUG
+#include "common.hh"
 namespace vhvc::cpudebug {
 	extern bool is_debugging;
 	extern bool nestest;

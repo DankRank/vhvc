@@ -1,5 +1,6 @@
 #ifndef VHVC_APU
 #define VHVC_APU
+#include "common.hh"
 namespace vhvc::apu {
 	void do_cycle();
 	uint8_t read_4015();

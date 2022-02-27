@@ -1,6 +1,6 @@
 #ifndef VHVC_PPUDEBUG
 #define VHVC_PPUDEBUG
-#include <SDL.h>
+#include "common.hh"
 namespace vhvc::ppudebug {
 	extern bool show_pt_window;
 	extern bool show_nt_window;

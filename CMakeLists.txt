@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.18)
 project(vhvc)
 find_package(SDL2 REQUIRED)
 add_executable(vhvc
+	src/common.hh
 	src/main.cc
 	src/imgui_compile.cc
 	src/cpu.cc src/cpu.hh

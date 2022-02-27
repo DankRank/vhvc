@@ -1,5 +1,6 @@
 #ifndef VHVC_NESFILE
 #define VHVC_NESFILE
+#include "common.hh"
 #include <vector>
 #include "span.hh"
 #include "io.hh"

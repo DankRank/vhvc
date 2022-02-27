@@ -1,4 +1,3 @@
-#include <assert.h>
 #include "bus.hh"
 #include "cpudebug.hh"
 #include "input.hh"

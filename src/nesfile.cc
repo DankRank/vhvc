@@ -1,7 +1,5 @@
-#include <stdint.h>
-#include <string.h>
-#include <utility>
 #include "nesfile.hh"
+#include <utility>
 #include "mapper.hh"
 #include "bus.hh"
 namespace vhvc {

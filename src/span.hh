@@ -1,6 +1,6 @@
 #ifndef VHVC_SPAN
 #define VHVC_SPAN
-#include <stdint.h>
+#include "common.hh"
 namespace vhvc {
 	template<typename T>
 	class span {

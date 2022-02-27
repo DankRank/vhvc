@@ -1,5 +1,3 @@
-#include <iostream>
-#include <SDL.h>
 #include "input.hh"
 #include "cpu.hh"
 #include "cpudebug.hh"

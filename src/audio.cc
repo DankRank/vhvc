@@ -1,7 +1,5 @@
-#include <SDL.h>
-#include <stdio.h>
-#include <string.h>
 #include "audio.hh"
+#include <stdio.h>
 namespace vhvc::audio {
 // The easy way would be to just use SDL_QueueAudio, but it holds the audio mutex,
 // and I want to write samples one at a time. I could write samples to a buffer

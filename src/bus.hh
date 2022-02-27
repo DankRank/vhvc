@@ -1,6 +1,6 @@
 #ifndef VHVC_BUS
 #define VHVC_BUS
-#include <stdint.h>
+#include "common.hh"
 #include "cpu.hh"
 namespace vhvc {
 	extern bool bus_inspect;

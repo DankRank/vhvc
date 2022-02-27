@@ -1,8 +1,7 @@
-#include "bus.hh"
 #include "cpudebug.hh"
 #include <stdio.h>
-#include <string.h>
-#include <imgui.h>
+#include "bus.hh"
+#include "imgui.h"
 namespace vhvc::cpudebug {
 static const char* insnames[256] = {
 	"BRK","ORA","JAM","SLO","NOP","ORA","ASL","SLO",

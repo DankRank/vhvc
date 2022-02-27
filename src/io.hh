@@ -1,7 +1,6 @@
 #ifndef VHVC_IO
 #define VHVC_IO
-#include <SDL.h>
-#include <stdint.h>
+#include "common.hh"
 #include <vector>
 #include "span.hh"
 namespace vhvc {

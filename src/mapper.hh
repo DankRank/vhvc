@@ -1,5 +1,6 @@
 #ifndef VHVC_MAPPER
 #define VHVC_MAPPER
+#include "common.hh"
 #include "nesfile.hh"
 #include "cpu.hh"
 namespace vhvc {

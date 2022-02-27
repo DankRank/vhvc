@@ -1,6 +1,6 @@
+#include "audio.hh"
 #include "bus.hh"
 #include "apu.hh"
-#include "audio.hh"
 #include <array>
 #include <algorithm>
 namespace vhvc::apu {
