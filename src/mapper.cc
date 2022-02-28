@@ -271,6 +271,32 @@ struct CPROM : LatchMapper<CPROM> {
 	}
 	CPROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
+struct UN1ROM : LatchMapper<UN1ROM> {
+	void poweron() {
+		set_prg16k(0, nf->get_prg16k(0));
+		set_prg16k(1, nf->get_prg16k(-1));
+		set_chr8k(nf->get_chr8k(0));
+		chrram_check();
+		set_mirroring(nf->vertical ? MIRRORING_VERTICAL : MIRRORING_HORIZONTAL);
+	}
+	void on_latch(uint8_t data) {
+		set_prg16k(0, nf->get_prg16k(data>>2 & 7));
+	}
+	UN1ROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
+};
+struct UNROM_AND : LatchMapper<UNROM_AND> {
+	void poweron() {
+		set_prg16k(0, nf->get_prg16k(0));
+		set_prg16k(1, nf->get_prg16k(0));
+		set_chr8k(nf->get_chr8k(0));
+		chrram_check();
+		set_mirroring(nf->vertical ? MIRRORING_VERTICAL : MIRRORING_HORIZONTAL);
+	}
+	void on_latch(uint8_t data) {
+		set_prg16k(1, nf->get_prg16k(data&7));
+	}
+	UNROM_AND(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
+};
 struct MMC1 : BasicMapper {
 	int reg = 0;
 	int bitn = 0;
@@ -589,6 +615,8 @@ void mapper_setup(NesFile& nf) {
 	case MAPNO(34, 1): mapper = new NINA001(nf); break;
 	case MAPNO(34, 2): mapper = new BNROM(nf, true); break;
 	case MAPNO(66, 0): mapper = new GxROM(nf, false); break;
+	case MAPNO(94, 0): mapper = new UN1ROM(nf, true); break;
+	case MAPNO(180, 0): mapper = new UNROM_AND(nf, true); break;
 	case MAPNO(206, 0): mapper = new DxROM(nf); break;
 	}
 }
