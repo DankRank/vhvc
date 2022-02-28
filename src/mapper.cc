@@ -1,5 +1,6 @@
 #include "mapper.hh"
 #include "bus.hh"
+#include "ppu.hh"
 #include "imgui.h"
 namespace vhvc {
 
@@ -585,6 +586,210 @@ struct MMC3 : BasicMapper {
 	}
 	MMC3(NesFile& nf) :BasicMapper(nf) {}
 };
+struct MMC5 : Mapper {
+	NesFile* nf = nullptr;
+	uint8_t prgram[131072] = { 0 };
+	uint8_t exram[1024] = { 0 };
+	uint8_t fill_tile = 0;
+	uint8_t fill_attr = 0;
+	int prg_mode = 0;
+	int chr_mode = 0;
+	int exram_mode = 0;
+	int nt_mapping = 0;
+	uint8_t* prg[5]; // 8k granularity
+	bool prg_wr[5];
+	uint8_t prg_reg[5] = { 0, 0x80, 0x80, 0x80, 0xFF };
+	uint8_t ram_prot1 = 0;
+	uint8_t ram_prot2 = 0;
+	uint8_t* chr[12];
+	uint16_t chr_reg[12];
+	uint8_t chr_upper = 0;
+	uint8_t mul1 = 0xFF, mul2 = 0xFF;
+	uint8_t scanline_compare = 0;
+	bool irq_enabled = false;
+	bool irq_pending = false;
+	bool obj_size = false;
+	int prev_line = 0;
+	uint8_t* prg_for_reg(uint8_t reg) {
+		if (reg & 0x80)
+			return nf->get_prg8k(reg&0x7F);
+		else
+			return &prgram[(reg&0x0F)<<13];
+	}
+	bool wr_for_reg(int n) {
+		return !(prg_reg[n]&0x80);
+	}
+	void refresh_prg() {
+		switch (prg_mode) {
+		case 0:
+			prg_wr[0] = wr_for_reg(0); prg[0] = prg_for_reg(prg_reg[0]);
+			prg_wr[1] = wr_for_reg(4); prg[1] = prg_for_reg(prg_reg[4]&0xFC);
+			prg_wr[2] = wr_for_reg(4); prg[2] = prg_for_reg(prg_reg[4]&0xFC | 1);
+			prg_wr[3] = wr_for_reg(4); prg[3] = prg_for_reg(prg_reg[4]&0xFC | 2);
+			prg_wr[4] = wr_for_reg(4); prg[4] = prg_for_reg(prg_reg[4]&0xFC | 3);
+			break;
+		case 1:
+			prg_wr[0] = wr_for_reg(0); prg[0] = prg_for_reg(prg_reg[0]);
+			prg_wr[1] = wr_for_reg(2); prg[1] = prg_for_reg(prg_reg[2]&0xFE);
+			prg_wr[2] = wr_for_reg(2); prg[2] = prg_for_reg(prg_reg[2]&0xFE | 1);
+			prg_wr[3] = wr_for_reg(4); prg[3] = prg_for_reg(prg_reg[4]&0xFE);
+			prg_wr[4] = wr_for_reg(4); prg[4] = prg_for_reg(prg_reg[4]&0xFE | 1);
+			break;
+		case 2:
+			prg_wr[0] = wr_for_reg(0); prg[0] = prg_for_reg(prg_reg[0]);
+			prg_wr[1] = wr_for_reg(2); prg[1] = prg_for_reg(prg_reg[2]&0xFE);
+			prg_wr[2] = wr_for_reg(2); prg[2] = prg_for_reg(prg_reg[2]&0xFE | 1);
+			prg_wr[3] = wr_for_reg(3); prg[3] = prg_for_reg(prg_reg[3]);
+			prg_wr[4] = wr_for_reg(4); prg[4] = prg_for_reg(prg_reg[4]);
+			break;
+		case 3:
+			prg_wr[0] = wr_for_reg(0); prg[0] = prg_for_reg(prg_reg[0]);
+			prg_wr[1] = wr_for_reg(1); prg[1] = prg_for_reg(prg_reg[1]);
+			prg_wr[2] = wr_for_reg(2); prg[2] = prg_for_reg(prg_reg[2]);
+			prg_wr[3] = wr_for_reg(3); prg[3] = prg_for_reg(prg_reg[3]);
+			prg_wr[4] = wr_for_reg(4); prg[4] = prg_for_reg(prg_reg[4]);
+			break;
+		}
+	}
+	void refresh_chr() {
+		switch (chr_mode) {
+		case 0:
+			for (int i = 0; i < 8; i++)
+				chr[i] = nf->get_chr1k(chr_reg[7]*8 + i);
+			for (int i = 0; i < 4; i++)
+				chr[8+i] = nf->get_chr1k(chr_reg[11]*8 + i); // i'm not entirely sure how exactly this slot works
+			break;
+		case 1:
+			for (int i = 0; i < 4; i++)
+				chr[i] = nf->get_chr1k(chr_reg[3]*4 + i);
+			for (int i = 0; i < 4; i++)
+				chr[4+i] = nf->get_chr1k(chr_reg[7]*4 + i);
+			for (int i = 0; i < 4; i++)
+				chr[8+i] = nf->get_chr1k(chr_reg[11]*4 + i);
+			break;
+		case 2:
+			for (int i = 0; i < 6; i++) {
+				chr[i*2] = nf->get_chr2k(chr_reg[i*2 + 1]*2);
+				chr[i*2 + 1] = nf->get_chr2k(chr_reg[i*2 + 1]*2 + 1);
+			}
+			break;
+		case 3:
+			for (int i = 0; i < 12; i++)
+				chr[i] = nf->get_chr1k(chr_reg[i]);
+			break;
+		}
+
+	}
+	void poweron() {
+		refresh_prg();
+		refresh_chr();
+		reset();
+	}
+	void reset() {
+		irq_pending = false;
+	}
+	uint8_t cpu_read(uint16_t addr) {
+		if (addr > 0x6000)
+			return prg[(addr>>13) - 3][addr & 0x1FFF];
+		if (addr >= 0x5C00 && addr <= 0x5FFF && exram_mode >= 2)
+			return exram[addr&0x3FF];
+		switch (addr) {
+		case 0x5204: {
+			bool in_frame = ppu::line >= 240 && (ppu::bg_enable || ppu::obj_enable);
+			irq_ack(IRQ_MAPPER);
+			if (irq_pending) {
+				irq_pending = false;
+				return in_frame ? 0xC0 : 0x80;
+			} else {
+				return in_frame ? 0x40 : 0x00;
+			}
+		}
+		case 0x5205: return mul1*mul2;
+		case 0x5206: return (mul1*mul2) >> 8;
+		}
+		return cpu::data_bus;
+	}
+	void cpu_write(uint16_t addr, uint8_t data) {
+		switch (addr) {
+		case 0x2000: obj_size = data&32; break;
+		// TODO: $5000-$5013 sound
+		// TODO: more faithful scanline counter/irq emulation
+		case 0x5100: prg_mode = data&3; refresh_prg(); return;
+		case 0x5101: chr_mode = data&3; refresh_chr(); return;
+		case 0x5102: ram_prot1 = data&3; return;
+		case 0x5103: ram_prot2 = data&3; return;
+		case 0x5104: exram_mode = data&3; return;
+		case 0x5105: nt_mapping = data; return;
+		case 0x5106: fill_tile = data; return;
+		case 0x5107: fill_attr = data&3; return;
+		case 0x5113: prg_reg[0] = data&0x7F; refresh_prg(); return;
+		case 0x5114: prg_reg[1] = data; refresh_prg(); return;
+		case 0x5115: prg_reg[2] = data; refresh_prg(); return;
+		case 0x5116: prg_reg[3] = data; refresh_prg(); return;
+		case 0x5117: prg_reg[4] = data|0x80; refresh_prg(); return;
+		case 0x5120: case 0x5121: case 0x5122: case 0x5123:
+		case 0x5124: case 0x5125: case 0x5126: case 0x5127:
+		case 0x5128: case 0x5129: case 0x512A: case 0x512B:
+			chr_reg[addr - 0x5120] = chr_upper<<8 | data; refresh_chr();
+			return;
+		case 0x5130: chr_upper = data&3; return;
+		// TODO: $5200 $5201 $5202 split screen
+		case 0x5203: scanline_compare = data; return;
+		case 0x5204: irq_enabled = data&0x80; if (irq_enabled && irq_pending) irq_raise(IRQ_MAPPER); return;
+		case 0x5205: mul1 = data; return;
+		case 0x5206: mul2 = data; return;
+		}
+		if (addr >= 0x6000 && ram_prot1 == 2 && ram_prot2 == 1) {
+			int slot = (addr>>13) - 3;
+			if (prg_wr[slot])
+				prg[slot][addr & 0x1FFF] = data;
+		}
+		if (addr >= 0x5C00 && addr <= 0x5FFF && exram_mode != 3) // FIXME: only allow writes during rendering
+			exram[addr&0x3FF] = data;
+	}
+	uint8_t ppu_read(uint16_t addr) {
+		// TODO: extended attributes
+		if (!bus_inspect) {
+			if (ppu::line != prev_line && scanline_compare && scanline_compare < 240 && ppu::line == scanline_compare) {
+				irq_pending = true;
+				if (irq_enabled) {
+					SDL_Log("line: %d, cyc: %d", ppu::line, ppu::dot);
+					irq_raise(IRQ_MAPPER);
+				}
+			}
+			prev_line = ppu::line;
+		}
+		if (addr >= 0x2000) {
+			int n = nt_mapping>>(addr>>9 & 6) & 3;
+			switch (n) {
+			case 0: return ppu_ram0[addr&0x3FF];
+			case 1: return ppu_ram1[addr&0x3FF];
+			case 2: return exram_mode&2 ? 0 : exram[addr&0x3FF];
+			case 3: return (addr&0x3FF) < 0x3C0 ? fill_tile : fill_attr*0x55;
+			}
+		} else {
+			// TODO: i think this is also predicated on rendering? (2002 or in_frame though?)
+			if (!obj_size || ppu::doing_an_obj_fetch)
+				return chr[addr>>10 & 7][addr&0x3FF];
+			else
+				return chr[8 + (addr>>10 & 3)][addr&0x3FF];
+		}
+	}
+	void ppu_write(uint16_t addr, uint8_t data) {
+		if (addr >= 0x2000) {
+			int n = nt_mapping>>(addr>>9 & 6) & 3;
+			switch (n) {
+			case 0: ppu_ram0[addr&0x3FF] = data; break;
+			case 1: ppu_ram1[addr&0x3FF] = data; break;
+			case 2: exram[addr&0x3FF] = data; break; // TODO: when is this writable?
+			}
+		}
+	}
+	void debug_gui() {
+		ImGui::Text("nt_mapping %x", nt_mapping);
+	}
+	MMC5(NesFile& nf) :nf(&nf) {}
+};
 void mapper_cleanup() {
 	if (mapper != &noop_mapper)
 		delete mapper;
@@ -604,6 +809,7 @@ void mapper_setup(NesFile& nf) {
 	case MAPNO(3, 2): mapper = new CNROM(nf, true); break;
 	case MAPNO(3, 1): mapper = new CNROM(nf, false); break;
 	case MAPNO(4, 0): mapper = new MMC3(nf); break;
+	case MAPNO(5, 0): mapper = new MMC5(nf); break;
 	case MAPNO(7, 0): [[fallthrough]];
 	case MAPNO(7, 2): mapper = new AxROM(nf, true); break;
 	case MAPNO(7, 1): mapper = new AxROM(nf, false); break;
