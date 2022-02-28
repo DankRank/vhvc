@@ -226,19 +226,19 @@ void do_cycle() {
 	case 11185*2 + 1: quarter_clock = true; break;
 	case 14914*2:
 		if (!five_step && !interrupt_inhibit)
-			set_irq_internal(true);
+			irq_raise(IRQ_FRAMECOUNTER);
 		break;
 	case 14914*2 + 1:
 		if (!five_step) {
 			quarter_clock = true; half_clock = true;
 			if (!interrupt_inhibit)
-				set_irq_internal(true);
+				irq_raise(IRQ_FRAMECOUNTER);
 		}
 		break;
 	case 14915*2:
 		if (!five_step) {
 			if (!interrupt_inhibit)
-				set_irq_internal(true);
+				irq_raise(IRQ_FRAMECOUNTER);
 			frame_counter = 0;
 		}
 		break;
@@ -278,7 +278,7 @@ void do_cycle() {
 }
 uint8_t read_4015() {
 	if (!bus_inspect)
-		set_irq_internal(false);
+		irq_ack(IRQ_FRAMECOUNTER);
 	return (pulse1.lc.counter ? 1 : 0) |
 		(pulse2.lc.counter ? 2 : 0) |
 		(triangle.lc.counter ? 4 : 0) |

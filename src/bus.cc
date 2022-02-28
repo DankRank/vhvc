@@ -6,21 +6,16 @@
 #include "apu.hh"
 namespace vhvc {
 bool bus_inspect = false;
-bool irq_internal = false;
-bool irq_external = false;
-void set_irq_internal(bool state) {
-	irq_internal = state;
-	cpu::irq = irq_internal || irq_external;
+void irq_raise(unsigned source) {
+	cpu::irq |= source;
 }
-void set_irq(bool state) {
-	irq_external = state;
-	cpu::irq = irq_internal || irq_external;
+void irq_ack(unsigned source) {
+	cpu::irq &= ~source;
 }
 void bus_poweron() {
 	cpu::poweron();
 	ppu::poweron();
-	set_irq_internal(false);
-	set_irq(false);
+	irq_ack(-1);
 	mapper->poweron();
 	memset(cpu_ram, 0xFF, 2048);
 	memset(ppu_ram, 0xFF, 2048);

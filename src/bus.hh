@@ -13,8 +13,13 @@ namespace vhvc {
 		inspect_lock& operator=(const inspect_lock&) = delete;
 	};
 
-	void set_irq_internal(bool state);
-	void set_irq(bool state);
+	enum {
+		IRQ_FRAMECOUNTER = 1<<0,
+		IRQ_DMC = 1<<1,
+		IRQ_MAPPER = 1<<2
+	};
+	void irq_raise(unsigned source);
+	void irq_ack(unsigned source);
 	void bus_poweron();
 	void bus_reset();
 

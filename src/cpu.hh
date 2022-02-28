@@ -13,7 +13,7 @@ namespace vhvc::cpu {
 	extern bool rdy_happened;
 	extern bool nmi_line;
 	extern bool nmi;
-	extern bool irq;
+	extern unsigned irq;
 	extern bool jammed;
 	extern bool C;
 	extern bool Z;
