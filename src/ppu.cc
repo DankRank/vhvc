@@ -24,6 +24,7 @@ bool obj_overflow = false;
 uint8_t oamaddr = 0;
 uint8_t oam[256] = {0};
 uint8_t oam_copy[32] = {0};
+int obj_count = 0;
 uint8_t oam_buf = 0;
 int oam_state = 0;
 int oam_copy_ptr = 0;
@@ -88,7 +89,6 @@ void reset() {
 
 static void do_oam_eval_write_cycle() {
 	// FIXME: this is terrible
-	// FIXME: junk sprites should be replaced with transparent data
 	switch (oam_state) {
 	case 0:
 		oam_copy[oam_copy_ptr] = oam_buf;
@@ -98,6 +98,7 @@ static void do_oam_eval_write_cycle() {
 			oamaddr++;
 			oam_state++;
 			oam_copy_ptr++;
+			obj_count++;
 		} else {
 			oamaddr += 4;
 		}
@@ -271,8 +272,10 @@ static void do_vram_reads() {
 					tile += 256;
 				}
 				y &= 7;
-				// FIXME: I think the value should be replaced with 0 if this is a nonexistent sprite
-				(which_byte ? obj_bits1 : obj_bits0)[obj_num] = ppu_read(tile*16 + y + which_byte);
+				uint8_t bits = ppu_read(tile*16 + y + which_byte);
+				if (obj_num >= obj_count)
+					bits = 0;
+				(which_byte ? obj_bits1 : obj_bits0)[obj_num] = bits;
 				if (dot == 320)
 					render_obj_line();
 			} else { // get bg tile
@@ -357,6 +360,7 @@ static void advance_scroll_regs() {
 }
 static void oam_eval() {
 	if (dot < 65) { // secondary OAM clear
+		obj_count = 0; // TODO: figure out exactly how this works
 		if (dot && !(dot&1)) // dots 2 4 6 8 etc
 			oam_copy[(dot-1) >> 1] = 0xFF;
 	} else if (dot < 257) { // OAM evaluation
