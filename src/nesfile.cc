@@ -69,6 +69,15 @@ NesFile::NesFile(std::vector<uint8_t>&& a_buf) :buf(a_buf) {
 		return;
 	if (!split_span(sp, chrrom_size(header.data()), chrrom))
 		return;
+
+	extra.resize(chrram_size);
+	chrram = span_u8(extra.data(), extra.data() + chrram_size);
+
+	if (chrrom.size() == 0) {
+		chr = chrram;
+	} else {
+		chr = chrrom;
+	}
 	is_valid = true;
 }
 bool load_rom(std::vector<uint8_t> &buf) {

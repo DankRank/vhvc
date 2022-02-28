@@ -60,6 +60,9 @@ struct BasicMapper : Mapper {
 		prg[2] = &bank[2*8192];
 		prg[3] = &bank[3*8192];
 	}
+	void chrram_check() {
+		has_chrram = !nf->chrrom.size();
+	}
 	void set_nametable(int i, uint8_t *nt) {
 		chr[12+i] = chr[8+i] = nt;
 	}
@@ -105,6 +108,8 @@ struct BasicMapper : Mapper {
 			sprintf(buf, "CHRROM:%llX", ptr - nf->chrrom.data());
 		else if (in_range(span_u8(ppu_ram, sizeof(ppu_ram)), ptr))
 			sprintf(buf, "CIRAM:%llX", ptr - ppu_ram);
+		else if (in_range(nf->chrram, ptr))
+			sprintf(buf, "CHRRAM:%llX", ptr - nf->chrram.data());
 		else if (in_range(span_u8(chrram, sizeof(chrram)), ptr))
 			sprintf(buf, "CHRRAM:%llX", ptr - chrram);
 		else if (!ptr)
@@ -135,18 +140,12 @@ struct BasicMapper : Mapper {
 };
 struct NROM : BasicMapper {
 	void poweron() {
-		if (nf->prgrom.size() == 32768) {
-			set_prg32k(nf->prgrom.data());
-		} else if (nf->prgrom.size() == 16384) {
-			set_prg16k(0, nf->prgrom.data());
-			set_prg16k(1, nf->prgrom.data());
-		} else {
-			set_prg8k(0, nf->prgrom.data());
-			set_prg8k(1, nf->prgrom.data());
-			set_prg8k(2, nf->prgrom.data());
-			set_prg8k(3, nf->prgrom.data());
-		}
-		set_chr8k(nf->chrrom.data());
+		set_prg8k(0, nf->get_prg8k(0));
+		set_prg8k(1, nf->get_prg8k(1));
+		set_prg8k(2, nf->get_prg8k(2));
+		set_prg8k(3, nf->get_prg8k(3));
+		set_chr8k(nf->get_chr8k(0));
+		chrram_check();
 		set_mirroring(nf->vertical ? MIRRORING_VERTICAL : MIRRORING_HORIZONTAL);
 	}
 	NROM(NesFile& nf) :BasicMapper(nf) {}
@@ -165,63 +164,43 @@ struct LatchMapper : BasicMapper {
 	}
 };
 struct UxROM : LatchMapper<UxROM> {
-	int banks;
-	int mask;
 	void poweron() {
-		set_prg16k(0, nf->prgrom.data());
-		set_prg16k(1, nf->prgrom.data()+16384*(banks-1));
-		if (nf->chrrom.size()) {
-			set_chr8k(nf->chrrom.data());
-		} else {
-			set_chr8k(chrram);
-			has_chrram = true;
-		}
+		set_prg16k(0, nf->get_prg16k(0));
+		set_prg16k(1, nf->get_prg16k(-1));
+		set_chr8k(nf->get_chr8k(0));
+		chrram_check();
 		set_mirroring(nf->vertical ? MIRRORING_VERTICAL : MIRRORING_HORIZONTAL);
 	}
 	void on_latch(uint8_t data) {
-		set_prg16k(0, nf->prgrom.data()+16384*(data&mask));
+		set_prg16k(0, nf->get_prg16k(data));
 	}
-	UxROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict), banks(nf.prgrom.size() / 16384) {
-		mask = banks - 1;
-	}
+	UxROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
 struct CNROM : LatchMapper<CNROM> {
-	int banks;
-	int mask;
 	void poweron() {
-		if (nf->prgrom.size() > 16384) {
-			set_prg32k(nf->prgrom.data());
-		} else {
-			set_prg16k(0, nf->prgrom.data());
-			set_prg16k(1, nf->prgrom.data());
-		}
-		set_chr8k(nf->chrrom.data());
+		set_prg16k(0, nf->get_prg16k(0));
+		set_prg16k(1, nf->get_prg16k(1));
+		set_chr8k(nf->get_chr8k(0));
+		chrram_check();
 		set_mirroring(nf->vertical ? MIRRORING_VERTICAL : MIRRORING_HORIZONTAL);
 	}
 	void on_latch(uint8_t data) {
-		set_chr8k(nf->chrrom.data() + 8192*(data&mask));
+		set_chr8k(nf->get_chr8k(data));
 	}
-	CNROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict), banks(nf.chrrom.size() / 8192) {
-		mask = banks - 1;
-	}
+	CNROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
 struct AxROM : LatchMapper<AxROM> {
-	int banks;
 	void poweron() {
-		set_prg32k(nf->prgrom.data()+32768*(banks-1));
-		if (nf->chrrom.size()) {
-			set_chr8k(nf->chrrom.data());
-		} else {
-			set_chr8k(chrram);
-			has_chrram = true;
-		}
+		set_prg32k(nf->get_prg32k(-1));
+		set_chr8k(nf->get_chr8k(0));
+		chrram_check();
 		set_mirroring(MIRRORING_SCREENA);
 	}
 	void on_latch(uint8_t data) {
 		set_mirroring(data & 0x10 ? MIRRORING_SCREENB : MIRRORING_SCREENA);
-		set_prg32k(nf->prgrom.data()+32768*(data&7));
+		set_prg32k(nf->get_prg32k(data&7));
 	}
-	AxROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict), banks(nf.prgrom.size() / 32768) {}
+	AxROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
 struct MMC1 : BasicMapper {
 	int reg = 0;
@@ -241,23 +220,21 @@ struct MMC1 : BasicMapper {
 		set_mirroring(mirroring_modes[reg_ctl&3]);
 		if (reg_ctl & 0x8) {
 			if (reg_ctl & 0x4) {
-				set_prg16k(0, nf->prgrom.data()+16384*(reg_prg & 15));
-				set_prg16k(1, nf->prgrom.data()+nf->prgrom.size()-16384);
+				set_prg16k(0, nf->get_prg16k(reg_prg & 15));
+				set_prg16k(1, nf->get_prg16k(-1));
 			} else {
-				set_prg16k(0, nf->prgrom.data());
-				set_prg16k(1, nf->prgrom.data()+16384*(reg_prg & 15));
+				set_prg16k(0, nf->get_prg16k(0));
+				set_prg16k(1, nf->get_prg16k(reg_prg & 15));
 			}
 		} else {
-			set_prg32k(nf->prgrom.data()+32768*(reg_prg/2 & 7));
+			set_prg32k(nf->get_prg32k(reg_prg/2 & 7));
 		}
-		if (!nf->chrrom.size()) {
-			set_chr8k(chrram);
-			has_chrram = true;
-		} else if (reg_ctl & 0x10) {
-			set_chr4k(0, nf->chrrom.data()+4096*reg_chr0);
-			set_chr4k(1, nf->chrrom.data()+4096*reg_chr1);
+		chrram_check();
+		if (reg_ctl & 0x10) {
+			set_chr4k(0, nf->get_chr4k(reg_chr0));
+			set_chr4k(0, nf->get_chr4k(reg_chr1));
 		} else {
-			set_chr8k(nf->chrrom.data()+8192*(reg_chr0/2));
+			set_chr8k(nf->get_chr8k(reg_chr0/2));
 		}
 	}
 	void cpu_write(uint16_t addr, uint8_t data) {
@@ -314,45 +291,45 @@ struct MMC2 : BasicMapper {
 	void poweron() {
 		set_mirroring(MIRRORING_VERTICAL);
 		if (isMMC4) {
-			set_prg16k(0, nf->prgrom.data());
-			set_prg16k(1, nf->prgrom.data() + nf->prgrom.size() - 16384);
+			set_prg16k(0, nf->get_prg16k(0));
+			set_prg16k(1, nf->get_prg16k(-1));
 		} else {
-			set_prg8k(0, nf->prgrom.data());
-			set_prg8k(1, nf->prgrom.data() + nf->prgrom.size() - 8192*3);
-			set_prg8k(2, nf->prgrom.data() + nf->prgrom.size() - 8192*2);
-			set_prg8k(3, nf->prgrom.data() + nf->prgrom.size() - 8192*1);
+			set_prg8k(0, nf->get_prg8k(0));
+			set_prg8k(1, nf->get_prg8k(-3));
+			set_prg8k(2, nf->get_prg8k(-2));
+			set_prg8k(3, nf->get_prg8k(-1));
 		}
-		set_chr4k(0, nf->chrrom.data());
-		set_chr4k(1, nf->chrrom.data());
+		set_chr4k(0, nf->get_chr4k(0));
+		set_chr4k(1, nf->get_chr4k(0));
 	}
 	void cpu_write(uint16_t addr, uint8_t data) {
 		BasicMapper::cpu_write(addr, data);
 		switch (addr & 0xF000) {
 		case 0xA000:
 			if (isMMC4)
-				set_prg16k(0, nf->prgrom.data() + (data&7)*16384);
+				set_prg16k(0, nf->get_prg16k(data&7));
 			else
-				set_prg8k(0, nf->prgrom.data() + (data&15)*8192);
+				set_prg8k(0, nf->get_prg8k(data&15));
 			break;
 		case 0xB000:
 			bank0FD = data & 0x1F;
 			if (!latch0) // FIXME: do those switches happen automatically?
-				set_chr4k(0, nf->chrrom.data() + bank0FD*4096);
+				set_chr4k(0, nf->get_chr4k(bank0FD));
 			break;
 		case 0xC000:
 			bank0FE = data & 0x1F;
 			if (latch0)
-				set_chr4k(0, nf->chrrom.data() + bank0FE*4096);
+				set_chr4k(0, nf->get_chr4k(bank0FE));
 			break;
 		case 0xD000:
 			bank1FD = data & 0x1F;
 			if (!latch1)
-				set_chr4k(1, nf->chrrom.data() + bank1FD*4096);
+				set_chr4k(1, nf->get_chr4k(bank1FD));
 			break;
 		case 0xE000:
 			bank1FE = data & 0x1F;
 			if (latch1)
-				set_chr4k(1, nf->chrrom.data() + bank1FE*4096);
+				set_chr4k(1, nf->get_chr4k(bank1FE));
 			break;
 		case 0xF000:
 			set_mirroring(data&1 ? MIRRORING_HORIZONTAL : MIRRORING_VERTICAL);
@@ -367,18 +344,18 @@ struct MMC2 : BasicMapper {
 			addr &= 0x3FF8;
 		if (addr == 0x0FD8) {
 			latch0 = false;
-			set_chr4k(0, nf->chrrom.data() + bank0FD*4096);
+			set_chr4k(0, nf->get_chr4k(bank0FD));
 		} else if (addr == 0x0FE8) {
 			latch0 = true;
-			set_chr4k(0, nf->chrrom.data() + bank0FE*4096);
+			set_chr4k(0, nf->get_chr4k(bank0FE));
 		}
 		addr &= 0x3FF8;
 		if (addr == 0x1FD8) {
 			latch1 = false;
-			set_chr4k(1, nf->chrrom.data() + bank1FD*4096);
+			set_chr4k(1, nf->get_chr4k(bank1FD));
 		} else if (addr == 0x1FE8) {
 			latch1 = true;
-			set_chr4k(1, nf->chrrom.data() + bank1FE*4096);
+			set_chr4k(1, nf->get_chr4k(bank1FE));
 		}
 		return rv;
 	}
@@ -387,10 +364,11 @@ struct MMC2 : BasicMapper {
 struct DxROM : BasicMapper {
 	int cur_reg = 0;
 	void poweron() {
+		set_prg16k(0, nf->get_prg16k(0));
+		set_prg16k(1, nf->get_prg16k(-1));
+		set_chr8k(nf->get_chr8k(0));
+		chrram_check();
 		set_mirroring(nf->vertical ? MIRRORING_VERTICAL : MIRRORING_HORIZONTAL);
-		set_prg16k(0, nf->prgrom.data());
-		set_prg16k(1, nf->prgrom.data() + nf->prgrom.size() - 16384);
-		set_chr8k(nf->chrrom.data());
 	}
 	void cpu_write(uint16_t addr, uint8_t data) {
 		BasicMapper::cpu_write(addr, data);
@@ -400,14 +378,14 @@ struct DxROM : BasicMapper {
 			break;
 		case 0x8001:
 			switch (cur_reg) {
-			case 0: set_chr2k(0, nf->chrrom.data() + (data&0x3E)*1024); break;
-			case 1: set_chr2k(1, nf->chrrom.data() + (data&0x3E)*1024); break;
-			case 2: set_chr1k(4, nf->chrrom.data() + (data&0x3F)*1024); break;
-			case 3: set_chr1k(5, nf->chrrom.data() + (data&0x3F)*1024); break;
-			case 4: set_chr1k(6, nf->chrrom.data() + (data&0x3F)*1024); break;
-			case 5: set_chr1k(7, nf->chrrom.data() + (data&0x3F)*1024); break;
-			case 6: set_prg8k(0, nf->prgrom.data() + (data&0x0F)*8192); break;
-			case 7: set_prg8k(1, nf->prgrom.data() + (data&0x0F)*8192); break;
+			case 0: set_chr2k(0, nf->get_chr1k(data&0x3E)); break;
+			case 1: set_chr2k(1, nf->get_chr1k(data&0x3E)); break;
+			case 2: set_chr1k(4, nf->get_chr1k(data&0x3F)); break;
+			case 3: set_chr1k(5, nf->get_chr1k(data&0x3F)); break;
+			case 4: set_chr1k(6, nf->get_chr1k(data&0x3F)); break;
+			case 5: set_chr1k(7, nf->get_chr1k(data&0x3F)); break;
+			case 6: set_prg8k(0, nf->get_prg8k(data&0x0F)); break;
+			case 7: set_prg8k(1, nf->get_prg8k(data&0x0F)); break;
 			}
 			break;
 		}
@@ -427,10 +405,11 @@ struct MMC3 : BasicMapper {
 	bool ppu_a12_d2 = false;
 	bool ppu_a12_d3 = false;
 	void poweron() {
+		set_prg16k(0, nf->get_prg16k(0));
+		set_prg16k(1, nf->get_prg16k(-1));
+		set_chr8k(nf->get_chr8k(0));
+		chrram_check();
 		set_mirroring(MIRRORING_VERTICAL);
-		set_prg16k(0, nf->prgrom.data());
-		set_prg16k(1, nf->prgrom.data() + nf->prgrom.size() - 16384);
-		set_chr8k(nf->chrrom.data());
 	}
 	void irq_tick() {
 		if (!ppu_a12_d3 && !ppu_a12_d2 && !ppu_a12_d1 && ppu_a12) {
@@ -456,14 +435,14 @@ struct MMC3 : BasicMapper {
 			break;
 		case 0x8001:
 			switch (cur_reg) {
-			case 0: set_chr2k(0, nf->chrrom.data() + (data&0xFE)*1024); break;
-			case 1: set_chr2k(1, nf->chrrom.data() + (data&0xFE)*1024); break;
-			case 2: set_chr1k(4, nf->chrrom.data() + data*1024); break;
-			case 3: set_chr1k(5, nf->chrrom.data() + data*1024); break;
-			case 4: set_chr1k(6, nf->chrrom.data() + data*1024); break;
-			case 5: set_chr1k(7, nf->chrrom.data() + data*1024); break;
-			case 6: set_prg8k(0, nf->prgrom.data() + (data&0x3F)*8192); break;
-			case 7: set_prg8k(1, nf->prgrom.data() + (data&0x3F)*8192); break;
+			case 0: set_chr2k(0, nf->get_chr1k(data&0xFE)); break;
+			case 1: set_chr2k(1, nf->get_chr1k(data&0xFE)); break;
+			case 2: set_chr1k(4, nf->get_chr1k(data)); break;
+			case 3: set_chr1k(5, nf->get_chr1k(data)); break;
+			case 4: set_chr1k(6, nf->get_chr1k(data)); break;
+			case 5: set_chr1k(7, nf->get_chr1k(data)); break;
+			case 6: set_prg8k(0, nf->get_prg8k(data&0x3F)); break;
+			case 7: set_prg8k(1, nf->get_prg8k(data&0x3F)); break;
 			}
 			break;
 		case 0xA000:
@@ -474,7 +453,7 @@ struct MMC3 : BasicMapper {
 			break;
 		case 0xC000: irq_latch = data; break;
 		case 0xC001: irq_reload = true; break;
-		case 0xE000: irq_enabled = false; set_irq(true); break;
+		case 0xE000: irq_enabled = false; set_irq(false); break;
 		case 0xE001: irq_enabled = true; break;
 		}
 	}
@@ -485,18 +464,29 @@ struct MMC3 : BasicMapper {
 		return BasicMapper::cpu_read(addr);
 	}
 	void ppu_write(uint16_t addr, uint8_t data) {
-		if (addr & 0x1000) // FIXME: timing of this might be slightly off
+		if (!bus_inspect && addr & 0x1000) // FIXME: timing of this might be slightly off
 			ppu_a12 = true;
 		if (chr_swap && !(addr & 0x2000))
 			addr ^= 0x1000;
 		BasicMapper::ppu_write(addr, data);
 	}
 	uint8_t ppu_read(uint16_t addr) {
-		if (addr & 0x1000)
+		if (!bus_inspect && addr & 0x1000)
 			ppu_a12 = true;
 		if (chr_swap && !(addr & 0x2000))
 			addr ^= 0x1000;
 		return BasicMapper::ppu_read(addr);
+	}
+	void debug_gui() {
+		BasicMapper::debug_gui();
+		ImGui::Text("ppu_a12 %c%c%c%c",
+			ppu_a12_d3 ? '+' : '-',
+			ppu_a12_d2 ? '+' : '-',
+			ppu_a12_d1 ? '+' : '-',
+			ppu_a12 ? '+' : '-');
+		ImGui::Text("irq_latch %d", irq_latch);
+		ImGui::Text("irq_counter %d", irq_counter);
+		ImGui::Text("irq_enabled %c | irq_reload %c", irq_enabled ? '+' : '-', irq_reload ? '+' : '-');
 	}
 	MMC3(NesFile& nf) :BasicMapper(nf) {}
 };
