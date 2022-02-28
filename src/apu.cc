@@ -51,6 +51,44 @@ static constexpr int16_t mix(int pulse1, int pulse2, int triangle, int noise, in
 // clock = a counter that ticks down when clocked and does something when it hits 0
 // timer = the reload value for the said counter
 // probably more correct names would be timer_counter and timer_period/timer_reload
+struct LengthCounter {
+	int counter = 0;
+	bool halt = false;
+	void tick() {
+		if (!halt && counter)
+			counter--;
+	}
+};
+struct Envelope {
+	bool constant_vol = false;
+	int param = 0;
+	bool start_flag = false;
+	int divider = 0;
+	int decay = 0;
+	bool loop = false;
+	void tick() {
+		if (start_flag) {
+			start_flag = false;
+			decay = 15;
+			divider = param;
+		} else {
+			if (!divider) {
+				divider = param;
+				if (!decay) {
+					if (loop)
+						decay = 15;
+				} else {
+					decay--;
+				}
+			} else {
+				divider--;
+			}
+		}
+	}
+	int output() {
+		return constant_vol ? param : decay;
+	}
+};
 struct Pulse {
 	bool enabled = false;
 	int duty = 0;
@@ -58,14 +96,8 @@ struct Pulse {
 	int clock = 0;
 	int timer = 0;
 
-	int length_counter = 0;
-	bool length_halt = false;
-
-	bool constant_vol = false;
-	int envelope_param = 0;
-	bool start_flag = false;
-	int envelope_divider = 0;
-	int envelope_decay = 0;
+	LengthCounter lc;
+	Envelope ev;
 
 	bool sweep_en = false;
 	int sweep_next = 0;
@@ -85,41 +117,19 @@ struct Pulse {
 		sweep_mute = next&0x800 || timer < 8;
 		sweep_next = next&0x7FF;
 	}
+	void sweep_tick() {
+		if (sweep_clock == 0 && sweep_en && sweep_shift != 0 && !sweep_mute) {
+			timer = sweep_next;
+			sweep_recalc();
+		}
+		if (sweep_clock == 0 || sweep_timer_reload) {
+			sweep_clock = sweep_timer;
+			sweep_timer_reload = false;
+		} else {
+			sweep_clock--;
+		}
+	}
 	void tick() {
-		if (half_clock) {
-			if (sweep_clock == 0 && sweep_en && sweep_shift != 0 && !sweep_mute) {
-				timer = sweep_next;
-				sweep_recalc();
-			}
-			if (sweep_clock == 0 || sweep_timer_reload) {
-				sweep_clock = sweep_timer;
-				sweep_timer_reload = false;
-			} else {
-				sweep_clock--;
-			}
-			if (!length_halt && length_counter)
-				length_counter--;
-		}
-		if (quarter_clock) {
-			if (start_flag) {
-				start_flag = 0;
-				envelope_decay = 15;
-				envelope_divider = envelope_param;
-			} else {
-				if (!envelope_divider) {
-					envelope_divider = envelope_param;
-					if (!envelope_decay) {
-						if (length_halt)
-							envelope_decay = 15;
-					} else {
-						envelope_decay--;
-					}
-				} else {
-					envelope_divider--;
-				}
-			}
-		}
-
 		if (clock == 0) {
 			sequence_no++;
 			sequence_no &= 7;
@@ -129,9 +139,9 @@ struct Pulse {
 		}	
 	}
 	int output() {
-		if (sweep_mute || !pulse_sequences[duty][sequence_no] || !length_counter)
+		if (sweep_mute || !pulse_sequences[duty][sequence_no] || !lc.counter)
 			return 0;
-		return constant_vol ? envelope_param : envelope_decay;
+		return ev.output();
 	}
 	Pulse(bool sweep_ch2) :sweep_ch2(sweep_ch2) {}
 };
@@ -143,30 +153,25 @@ struct Triangle {
 	int clock = 0;
 	int timer = 0;
 
-	int length_counter = 0;
-	bool length_halt = false;
+	LengthCounter lc;
 
 	int linear_clock = 0;
 	int linear_timer = 0;
 	bool linear_reload = false;
 
+	void linear_tick() {
+		if (linear_reload) {
+			linear_clock = linear_timer;
+		} else {
+			if (linear_clock)
+				linear_clock--;
+		}
+		if (!lc.halt)
+			linear_reload = false;
+	}
 	void tick() {
-		if (half_clock) {
-			if (!length_halt && length_counter)
-				length_counter--;
-		}
-		if (quarter_clock) {
-			if (linear_reload) {
-				linear_clock = linear_timer;
-			} else {
-				if (linear_clock)
-					linear_clock--;
-			}
-			if (!length_halt)
-				linear_reload = false;
-		}
 		if (clock == 0) {
-			if (length_counter && linear_clock) {
+			if (lc.counter && linear_clock) {
 				sequence_no++;
 				sequence_no &= 31;
 			}
@@ -187,39 +192,10 @@ struct Noise {
 	int clock = 0;
 	int timer = 0;
 
-	int length_counter = 0;
-	bool length_halt = false;
-
-	bool constant_vol = false;
-	int envelope_param = 0;
-	bool start_flag = false;
-	int envelope_divider = 0;
-	int envelope_decay = 0;
+	LengthCounter lc;
+	Envelope ev;
 
 	void tick() {
-		if (half_clock) {
-			if (!length_halt && length_counter)
-				length_counter--;
-		}
-		if (quarter_clock) {
-			if (start_flag) {
-				start_flag = 0;
-				envelope_decay = 15;
-				envelope_divider = envelope_param;
-			} else {
-				if (!envelope_divider) {
-					envelope_divider = envelope_param;
-					if (!envelope_decay) {
-						if (length_halt)
-							envelope_decay = 15;
-					} else {
-						envelope_decay--;
-					}
-				} else {
-					envelope_divider--;
-				}
-			}
-		}
 		if (clock == 0) {
 			if (mode)
 				sr |= (sr>>6 ^ sr)<<15;
@@ -232,9 +208,9 @@ struct Noise {
 		}
 	}
 	int output() {
-		if (sr & 1 || !length_counter)
+		if (sr & 1 || !lc.counter)
 			return 0;
-		return constant_vol ? envelope_param : envelope_decay;
+		return ev.output();
 	}
 };
 Noise noise{};
@@ -271,6 +247,20 @@ void do_cycle() {
 		frame_counter = 0;
 		break;
 	}
+	if (half_clock) {
+		pulse1.sweep_tick();
+		pulse2.sweep_tick();
+		pulse1.lc.tick();
+		pulse2.lc.tick();
+		triangle.lc.tick();
+		noise.lc.tick();
+	}
+	if (quarter_clock) {
+		pulse1.ev.tick();
+		pulse2.ev.tick();
+		triangle.linear_tick();
+		noise.ev.tick();
+	}
 	triangle.tick();
 	if ((frame_counter & 1) == 1) {
 		pulse1.tick();
@@ -289,10 +279,10 @@ void do_cycle() {
 uint8_t read_4015() {
 	if (!bus_inspect)
 		set_irq_internal(false);
-	return (pulse1.length_counter ? 1 : 0) |
-		(pulse2.length_counter ? 2 : 0) |
-		(triangle.length_counter ? 4 : 0) |
-		(noise.length_counter ? 8 : 0);
+	return (pulse1.lc.counter ? 1 : 0) |
+		(pulse2.lc.counter ? 2 : 0) |
+		(triangle.lc.counter ? 4 : 0) |
+		(noise.lc.counter ? 8 : 0);
 }
 void reg_write(uint16_t addr, uint8_t data) {
 	switch (addr) {
@@ -300,9 +290,9 @@ void reg_write(uint16_t addr, uint8_t data) {
 	case 0x4004: {
 		Pulse& p = (addr & 4 ? pulse2 : pulse1);
 		p.duty = data>>6;
-		p.length_halt = data&0x20;
-		p.constant_vol = data&0x10;
-		p.envelope_param = data&0x0F;
+		p.ev.loop = p.lc.halt = data&0x20;
+		p.ev.constant_vol = data&0x10;
+		p.ev.param = data&0x0F;
 		break;
 	}
 	case 0x4001:
@@ -327,15 +317,15 @@ void reg_write(uint16_t addr, uint8_t data) {
 	case 0x4007: {
 		Pulse& p = (addr & 4 ? pulse2 : pulse1);
 		if (p.enabled)
-			p.length_counter = length_table[data>>3];
+			p.lc.counter = length_table[data>>3];
 		p.timer = p.timer&0x0FF | (data&7)<<8;
-		p.start_flag = true;
+		p.ev.start_flag = true;
 		p.sequence_no = 0;
 		p.sweep_recalc();
 		break;
 	}
 	case 0x4008:
-		triangle.length_halt = data&0x80;
+		triangle.lc.halt = data&0x80;
 		triangle.linear_timer = data&0x7F;
 		break;
 	case 0x400A:
@@ -343,14 +333,14 @@ void reg_write(uint16_t addr, uint8_t data) {
 		break;
 	case 0x400B:
 		if (triangle.enabled)
-			triangle.length_counter = length_table[data>>3];
+			triangle.lc.counter = length_table[data>>3];
 		triangle.timer = triangle.timer&0x0FF | (data&7)<<8;
 		triangle.linear_reload = true;
 		break;
 	case 0x400C:
-		noise.length_halt = data&0x20;
-		noise.constant_vol = data&0x10;
-		noise.envelope_param = data&0x0F;
+		noise.ev.loop = noise.lc.halt = data&0x20;
+		noise.ev.constant_vol = data&0x10;
+		noise.ev.param = data&0x0F;
 		break;
 	case 0x400E:
 		noise.mode = data&0x80;
@@ -358,18 +348,18 @@ void reg_write(uint16_t addr, uint8_t data) {
 		break;
 	case 0x400F:
 		if (noise.enabled)
-			noise.length_counter = length_table[data>>3];
-		noise.start_flag = true;
+			noise.lc.counter = length_table[data>>3];
+		noise.ev.start_flag = true;
 		break;
 	case 0x4015:
 		if (!(pulse1.enabled = data&1))
-			pulse1.length_counter = 0;
+			pulse1.lc.counter = 0;
 		if (!(pulse2.enabled = data&2))
-			pulse2.length_counter = 0;
+			pulse2.lc.counter = 0;
 		if (!(triangle.enabled = data&4))
-			triangle.length_counter = 0;
+			triangle.lc.counter = 0;
 		if (!(noise.enabled = data&8))
-			noise.length_counter = 0;
+			noise.lc.counter = 0;
 		break;
 	case 0x4017:
 		five_step = data & 0x80;
