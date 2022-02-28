@@ -202,6 +202,75 @@ struct AxROM : LatchMapper<AxROM> {
 	}
 	AxROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
+struct ColorDreams : LatchMapper<ColorDreams> {
+	void poweron() {
+		set_prg32k(nf->get_prg32k(0));
+		set_chr8k(nf->get_chr8k(0));
+		chrram_check();
+		set_mirroring(nf->vertical ? MIRRORING_VERTICAL : MIRRORING_HORIZONTAL);
+	}
+	void on_latch(uint8_t data) {
+		set_prg32k(nf->get_prg32k(data&3));
+		set_chr8k(nf->get_chr8k(data>>4));
+	}
+	ColorDreams(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
+};
+struct GxROM : LatchMapper<GxROM> {
+	void poweron() {
+		set_prg32k(nf->get_prg32k(0));
+		set_chr8k(nf->get_chr8k(0));
+		chrram_check();
+		set_mirroring(nf->vertical ? MIRRORING_VERTICAL : MIRRORING_HORIZONTAL);
+	}
+	void on_latch(uint8_t data) {
+		set_prg32k(nf->get_prg32k(data>>4 & 3));
+		set_chr8k(nf->get_chr8k(data&3));
+	}
+	GxROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
+};
+struct BNROM : LatchMapper<BNROM> {
+	void poweron() {
+		set_prg32k(nf->get_prg32k(0));
+		set_chr8k(nf->get_chr8k(0));
+		chrram_check();
+		set_mirroring(nf->vertical ? MIRRORING_VERTICAL : MIRRORING_HORIZONTAL);
+	}
+	void on_latch(uint8_t data) {
+		set_prg32k(nf->get_prg32k(data&3));
+	}
+	BNROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
+};
+struct NINA001 : BasicMapper {
+	void poweron() {
+		set_prg32k(nf->get_prg32k(0));
+		set_chr4k(0, nf->get_chr4k(0));
+		set_chr4k(1, nf->get_chr4k(0));
+		chrram_check();
+		set_mirroring(nf->vertical ? MIRRORING_VERTICAL : MIRRORING_HORIZONTAL);
+	}
+	void cpu_write(uint16_t addr, uint8_t data) {
+		BasicMapper::cpu_write(addr, data);
+		switch (addr) {
+		case 0x7FFD: set_prg32k(nf->get_prg32k(data&1)); break;
+		case 0x7FFE: set_chr4k(0, nf->get_chr4k(data&15)); break;
+		case 0x7FFF: set_chr4k(1, nf->get_chr4k(data&15)); break;
+		}
+	}
+	NINA001(NesFile& nf) :BasicMapper(nf) {}
+};
+struct CPROM : LatchMapper<CPROM> {
+	void poweron() {
+		set_prg32k(nf->get_prg32k(0));
+		set_chr4k(0, nf->get_chr4k(0));
+		set_chr4k(1, nf->get_chr4k(0));
+		chrram_check();
+		set_mirroring(nf->vertical ? MIRRORING_VERTICAL : MIRRORING_HORIZONTAL);
+	}
+	void on_latch(uint8_t data) {
+		set_chr4k(1, nf->get_chr4k(data&3));
+	}
+	CPROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
+};
 struct MMC1 : BasicMapper {
 	int reg = 0;
 	int bitn = 0;
@@ -514,6 +583,12 @@ void mapper_setup(NesFile& nf) {
 	case MAPNO(7, 1): mapper = new AxROM(nf, false); break;
 	case MAPNO(9, 0): mapper = new MMC2(nf, false); break;
 	case MAPNO(10, 0): mapper = new MMC2(nf, true); break;
+	case MAPNO(11, 0): mapper = new ColorDreams(nf, false); break;
+	case MAPNO(13, 0): mapper = new CPROM(nf, true); break;
+	case MAPNO(34, 0): mapper = nf.chrrom.size() > 8192 ? (Mapper*)new NINA001(nf) : new BNROM(nf, true); break;
+	case MAPNO(34, 1): mapper = new NINA001(nf); break;
+	case MAPNO(34, 2): mapper = new BNROM(nf, true); break;
+	case MAPNO(66, 0): mapper = new GxROM(nf, false); break;
 	case MAPNO(206, 0): mapper = new DxROM(nf); break;
 	}
 }

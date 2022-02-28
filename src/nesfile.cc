@@ -65,6 +65,10 @@ NesFile::NesFile(std::vector<uint8_t>&& a_buf) :buf(a_buf) {
 	chrram_size = 64 << (header[11] & 0xF);
 	chrnvram_size = 64 << (header[11] >> 4 & 0xF);
 
+	if (is_ines && mapper>>4 == 13) { // CPROM
+		chrram_size = 16384;
+	}
+
 	if (!split_span(sp, prgrom_size(header.data()), prgrom))
 		return;
 	if (!split_span(sp, chrrom_size(header.data()), chrrom))
