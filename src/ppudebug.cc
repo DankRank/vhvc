@@ -34,29 +34,32 @@ void draw_obj_over_nt(void *pixels, int pitch) {
 		bool flipx = ppu::oam[i+2] & 0x40;
 		bool flipy = ppu::oam[i+2] & 0x80;
 		int x = ppu::oam[i+3]+1;
-		uint16_t pattern_table = ppu::obj_size && ppu::obj_pattern ? 0x1000 : 0x0000;
 		uint32_t* pp = add_lines(pixels, pitch, y) + x;
 		// NOTE: we don't care about bounds checking here, because we're drawing on top of the NT0
-		for (int part = 0; part < (ppu::obj_size ? 2 : 1); part++) {
-			for (int y = 0; y < 8; y++) {
+		for (int y = 0; y < (ppu::obj_size ? 16 : 8); y++) {
+			int ny;
+			int ntile;
+			if (ppu::obj_size) {
+				ntile = tile&0xFE | (tile<<8 & 0x100);
+				ny = (y<<1 & 0x10) | (y & 0x7);
 				if (flipy)
-					y = 7-y;
-				uint8_t bits0 = ppu_read(pattern_table + tile*(ppu::obj_size ? 32 : 16) + part*16 + y);
-				uint8_t bits1 = ppu_read(pattern_table + tile*(ppu::obj_size ? 32 : 16) + part*16 + y + 8);
-				for (int x = 0; x < 8; x++) {
-					if (flipx)
-						x = 7-x;
-					if ((bits0 | bits1)>>(7-x) & 1)
-						*pp++ = ppu::rgb_palette[0x10 | attr<<2 | bits0>>(7-x)&1 | bits1>>(7 - x)<<1 & 2];
-					else
-						pp++;
-					if (flipx)
-						x = 7-x;
-				}
-				pp = add_lines(pp, pitch, 1) - 8;
+					ny ^= 0x17;
+			} else {
+				ntile = tile + (ppu::obj_pattern ? 0x100 : 0);
+				ny = y;
 				if (flipy)
-					y = 7-y;
+					ny ^= 0x07;
 			}
+			uint8_t bits0 = ppu_read(tile*16 + ny);
+			uint8_t bits1 = ppu_read(tile*16 + ny + 8);
+			for (int x = 0; x < 8; x++) {
+				int nx = flipx ? x : 7-x;
+				if ((bits0 | bits1)>>nx & 1)
+					*pp++ = ppu::rgb_palette[0x10 | attr<<2 | bits0>>nx&1 | bits1>>nx<<1 & 2];
+				else
+					pp++;
+			}
+			pp = add_lines(pp, pitch, 1) - 8;
 		}
 	}
 }
