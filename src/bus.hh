@@ -20,6 +20,7 @@ namespace vhvc {
 	};
 	void irq_raise(unsigned source);
 	void irq_ack(unsigned source);
+	bool irq_status(unsigned source);
 	void bus_poweron();
 	void bus_reset();
 

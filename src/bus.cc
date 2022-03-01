@@ -12,6 +12,9 @@ void irq_raise(unsigned source) {
 void irq_ack(unsigned source) {
 	cpu::irq &= ~source;
 }
+bool irq_status(unsigned source) {
+	return cpu::irq & source;
+}
 void bus_poweron() {
 	cpu::poweron();
 	ppu::poweron();

@@ -28,6 +28,12 @@ static constexpr uint8_t noise_period_ntsc[16] = {
 static constexpr uint8_t noise_period_pal[16] = {
 	4, 8, 14, 30, 60, 88, 118, 148, 188, 236, 354, 472, 708,  944, 1890, 3778
 };
+static constexpr uint8_t dmc_rate_ntsc[16] = {
+	428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106,  84,  72,  54
+};
+static constexpr uint8_t dmc_rate_pal[16] = {
+	398, 354, 316, 298, 276, 236, 210, 198, 176, 148, 132, 118,  98,  78,  66,  50
+};
 static constexpr std::array<int16_t, 31> pulse_table_gen() {
 	std::array<int16_t, 31> tab{};
 	tab[0] = 0;
@@ -214,6 +220,74 @@ struct Noise {
 	}
 };
 Noise noise{};
+struct DMC {
+	bool enabled = false;
+	bool irq_enabled = false;
+	bool loop = false;
+	int clock = 0;
+	int timer = 54;
+	uint8_t level = 0;
+	uint16_t addr = 0xC000;
+	uint16_t len = 0;
+	uint16_t cur_addr = 0xC000;
+	uint16_t remaining = 0;
+
+	int bits_remaining = 8;
+	bool silence = true;
+	uint8_t sr = 0;
+
+	uint8_t buffer = 0;
+	bool buffer_full = false;
+	bool restart_pending = false;
+
+	void tick() {
+		if (clock == 0) {
+			clock = timer;
+			if (!silence) {
+				if (sr & 1) {
+					if (level < 126)
+						level += 2;
+				} else if (level > 1) {
+					level -= 2;
+				}
+			}
+			sr >>= 1;
+			if (--bits_remaining == 0) {
+				if (buffer_full) {
+					sr = buffer;
+					silence = false;
+					buffer_full = false;
+				} else {
+					silence = true;
+				}
+				bits_remaining = 8;
+			}
+		} else {
+			clock--;
+		}
+		if (enabled && !buffer_full && remaining) {
+			inspect_lock lk;
+			buffer = cpu_read(cur_addr);
+			buffer_full = true;
+			cur_addr++;
+			cur_addr |= 0x8000;
+			if (--remaining == 0) {
+				if (loop || restart_pending) {
+					cur_addr = addr;
+					remaining = len;
+					restart_pending = false;
+				} else {
+					if (irq_enabled)
+						irq_raise(IRQ_DMC);
+				}
+			}
+		}
+	}
+	int output() {
+		return level;
+	}
+};
+DMC dmc{};
 bool five_step = false;
 bool interrupt_inhibit = true;
 int frame_counter = 0;
@@ -266,10 +340,11 @@ void do_cycle() {
 		pulse1.tick();
 		pulse2.tick();
 		noise.tick();
+		dmc.tick();
 		sampling_clock += apu_period;
 		if (sampling_clock > sampling_period) {
 			sampling_clock -= sampling_period;
-			audio::enqueue(mix(pulse1.output(), pulse2.output(), triangle.output(), noise.output(), 0));
+			audio::enqueue(mix(pulse1.output(), pulse2.output(), triangle.output(), noise.output(), dmc.output()));
 		}
 	}
 	frame_counter++;
@@ -277,12 +352,16 @@ void do_cycle() {
 	half_clock = false;
 }
 uint8_t read_4015() {
+	// TODO: race between reading and clearing FC irq
+	bool fcirq = irq_status(IRQ_FRAMECOUNTER);
 	if (!bus_inspect)
 		irq_ack(IRQ_FRAMECOUNTER);
 	return (pulse1.lc.counter ? 1 : 0) |
 		(pulse2.lc.counter ? 2 : 0) |
 		(triangle.lc.counter ? 4 : 0) |
-		(noise.lc.counter ? 8 : 0);
+		(noise.lc.counter ? 8 : 0) |
+		(fcirq ? 0x40 : 0) |
+		(irq_status(IRQ_DMC) ? 0x80 : 0);
 }
 void reg_write(uint16_t addr, uint8_t data) {
 	switch (addr) {
@@ -351,6 +430,16 @@ void reg_write(uint16_t addr, uint8_t data) {
 			noise.lc.counter = length_table[data>>3];
 		noise.ev.start_flag = true;
 		break;
+	case 0x4010:
+		dmc.irq_enabled = data&0x80;
+		if (!dmc.irq_enabled)
+			irq_ack(IRQ_DMC);
+		dmc.loop = data&0x40;
+		dmc.timer = dmc_rate_ntsc[data&0x0F]/2;
+		break;
+	case 0x4011: dmc.level = data&0x7F; break;
+	case 0x4012: dmc.addr = 0xC000 | data<<6; break;
+	case 0x4013: dmc.len = data<<4 | 1; break;
 	case 0x4015:
 		if (!(pulse1.enabled = data&1))
 			pulse1.lc.counter = 0;
@@ -360,6 +449,17 @@ void reg_write(uint16_t addr, uint8_t data) {
 			triangle.lc.counter = 0;
 		if (!(noise.enabled = data&8))
 			noise.lc.counter = 0;
+		if ((dmc.enabled = data & 16)) {
+			if (dmc.remaining == 0) {
+				dmc.cur_addr = dmc.addr;
+				dmc.remaining = dmc.len;
+			} else {
+				dmc.restart_pending = true;
+			}
+		} else {
+			dmc.remaining = 0;
+		}
+		irq_ack(IRQ_DMC);
 		break;
 	case 0x4017:
 		five_step = data & 0x80;
