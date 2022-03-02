@@ -12,6 +12,8 @@ add_executable(vhvc
 	src/ppudebug.cc src/ppudebug.hh
 	src/input.cc src/input.hh
 	src/mapper.cc src/mapper.hh
+	src/mapper_discrete.cc
+	src/mapper_mmc.cc
 	src/nesfile.cc src/nesfile.hh
 	src/span.hh
 	src/io.hh
