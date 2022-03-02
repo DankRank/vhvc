@@ -1,5 +1,23 @@
 vhvc - A Famicom Emulator
 
+- Supported Mappers -
+	NROM (0)
+	MMC1 (1)
+	UxROM (2)
+	CNROM (3)
+	MMC3 (4)
+	MMC5 (5)
+	AxROM (7)
+	MMC2 (9)
+	MMC4 (10)
+	ColorDreams (11)
+	CPROM (13)
+	BNROM (34)
+	GxROM (66)
+	UN1ROM (66)
+	UNROM AND-logic (180)
+	DxROM (206)
+
 - Build Instructions -
 Requirements:
 	CMake 3.18+
