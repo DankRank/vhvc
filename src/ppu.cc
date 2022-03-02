@@ -52,7 +52,6 @@ uint64_t bg_shiftreg = 0;
 // |+-------- sprite zero
 // +--------- priority
 uint8_t obj_out[256] = { 0 };
-bool doing_an_obj_fetch = false;
 uint32_t palette_to_rgb(uint8_t data) {
 	if (grayscale)
 		data &= 0x30;
@@ -273,9 +272,7 @@ static void do_vram_reads() {
 					tile += 256;
 				}
 				y &= 7;
-				doing_an_obj_fetch = true;
 				uint8_t bits = ppu_read(tile*16 + y + which_byte);
-				doing_an_obj_fetch = false;
 				if (obj_num >= obj_count)
 					bits = 0;
 				(which_byte ? obj_bits1 : obj_bits0)[obj_num] = bits;

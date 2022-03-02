@@ -610,6 +610,7 @@ struct MMC5 : Mapper {
 	bool irq_pending = false;
 	bool obj_size = false;
 	int prev_line = 0;
+	uint16_t last_nt = 0;
 	uint8_t* prg_for_reg(uint8_t reg) {
 		if (reg & 0x80)
 			return nf->get_prg8k(reg&0x7F);
@@ -748,16 +749,27 @@ struct MMC5 : Mapper {
 			exram[addr&0x3FF] = data;
 	}
 	uint8_t ppu_read(uint16_t addr) {
-		// TODO: extended attributes
 		if (!bus_inspect) {
 			if (ppu::line != prev_line && scanline_compare && scanline_compare < 240 && ppu::line == scanline_compare) {
 				irq_pending = true;
 				if (irq_enabled) {
-					SDL_Log("line: %d, cyc: %d", ppu::line, ppu::dot);
+					//SDL_Log("line: %d, cyc: %d", ppu::line, ppu::dot);
 					irq_raise(IRQ_MAPPER);
 				}
 			}
 			prev_line = ppu::line;
+		}
+		if (exram_mode == 1 && (ppu::line < 240 || ppu::line == 261) && ppu::dot && (ppu::dot < 257 || ppu::dot > 320)) {
+			switch (ppu::dot&7) {
+			case 2:
+				last_nt = addr&0x3FF;
+				break;
+			case 4:
+				return (exram[last_nt]>>6) * 0x55;
+			case 6:
+			case 0:
+				return nf->get_chr4k(chr_upper<<6 | exram[last_nt]&0x3F)[addr&0xFFF];
+			}
 		}
 		if (addr >= 0x2000) {
 			int n = nt_mapping>>(addr>>9 & 6) & 3;
@@ -768,12 +780,14 @@ struct MMC5 : Mapper {
 			case 3: return (addr&0x3FF) < 0x3C0 ? fill_tile : fill_attr*0x55;
 			}
 		} else {
+
 			// TODO: i think this is also predicated on rendering? (2002 or in_frame though?)
-			if (!obj_size || ppu::doing_an_obj_fetch)
+			if (!obj_size || ppu::line < 240 && ppu::dot >= 257 && ppu::dot <= 320 && ((ppu::dot&7) == 0 || (ppu::dot&7) == 6))
 				return chr[addr>>10 & 7][addr&0x3FF];
 			else
 				return chr[8 + (addr>>10 & 3)][addr&0x3FF];
 		}
+		return addr&0xFF;
 	}
 	void ppu_write(uint16_t addr, uint8_t data) {
 		if (addr >= 0x2000) {
@@ -786,7 +800,16 @@ struct MMC5 : Mapper {
 		}
 	}
 	void debug_gui() {
+		ImGui::Text("prg_mode %d", prg_mode);
+		ImGui::Text("chr_mode %d", chr_mode);
+		ImGui::Text("exram_mode %d", exram_mode);
 		ImGui::Text("nt_mapping %x", nt_mapping);
+		for (int i = 0; i < 5; i++)
+			ImGui::Text("%x %x", 0x5113+i, prg_reg[i]);
+		for (int i = 0; i < 12; i++)
+			ImGui::Text("%x %x", 0x5120+i, chr_reg[i]);
+		ImGui::Text("chr_upper %x", chr_upper);
+
 	}
 	MMC5(NesFile& nf) :nf(&nf) {}
 };
