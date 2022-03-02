@@ -43,6 +43,7 @@ namespace vhvc {
 				rw->close(rw);
 			rw = oth.rw;
 			oth.rw = nullptr;
+			return *this;
 		}
 		~File() {
 			if (rw)

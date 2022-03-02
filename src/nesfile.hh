@@ -50,7 +50,7 @@ namespace vhvc {
 		uint8_t* get_chr4k(int no) { return chr.data() + normalize(no, count_chr4k())*4096; }
 		uint8_t* get_chr8k(int no) { return chr.data() + normalize(no, count_chr8k())*8192; }
 
-		NesFile::NesFile(std::vector<uint8_t>&& buf);
+		NesFile(std::vector<uint8_t>&& buf);
 
 		NesFile() = default;
 		~NesFile() = default;

@@ -22,16 +22,16 @@ static constexpr uint8_t length_table[32] = {
 	10,254, 20,  2, 40,  4, 80,  6, 160,  8, 60, 10, 14, 12, 26, 14,
 	12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30,
 };
-static constexpr uint8_t noise_period_ntsc[16] = {
+static constexpr unsigned noise_period_ntsc[16] = {
 	4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068
 };
-static constexpr uint8_t noise_period_pal[16] = {
+static constexpr unsigned noise_period_pal[16] = {
 	4, 8, 14, 30, 60, 88, 118, 148, 188, 236, 354, 472, 708,  944, 1890, 3778
 };
-static constexpr uint8_t dmc_rate_ntsc[16] = {
+static constexpr unsigned dmc_rate_ntsc[16] = {
 	428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106,  84,  72,  54
 };
-static constexpr uint8_t dmc_rate_pal[16] = {
+static constexpr unsigned dmc_rate_pal[16] = {
 	398, 354, 316, 298, 276, 236, 210, 198, 176, 148, 132, 118,  98,  78,  66,  50
 };
 static constexpr std::array<int16_t, 31> pulse_table_gen() {
@@ -142,7 +142,7 @@ struct Pulse {
 			clock = timer;
 		} else {
 			clock--;
-		}	
+		}
 	}
 	int output() {
 		if (sweep_mute || !pulse_sequences[duty][sequence_no] || !lc.counter)
@@ -293,7 +293,7 @@ bool interrupt_inhibit = true;
 int frame_counter = 0;
 void do_cycle() {
 	// FIXME: ugly
-	
+
 	switch (frame_counter) {
 	case 3728*2 + 1: quarter_clock = true; break;
 	case 7456*2 + 1: quarter_clock = true; half_clock = true; break;

@@ -5,7 +5,7 @@
 #include "ppu.hh"
 #include "palette.hh"
 namespace vhvc::ppudebug {
-constexpr inline uint32_t* add_lines(void *p, int pitch, int y) {
+static inline uint32_t* add_lines(void *p, int pitch, int y) {
 	return (uint32_t*)((uint8_t*)p + pitch*y);
 }
 void draw_pt(SDL_Texture *tex) {
