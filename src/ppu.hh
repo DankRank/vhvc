@@ -43,7 +43,6 @@ namespace vhvc::ppu {
 	extern uint8_t obj_bits1[8];
 	extern uint64_t bg_shiftreg;
 	extern uint8_t obj_out[256];
-	extern bool doing_an_obj_fetch;
 	enum {
 		PPUCTRL = 0,
 		PPUMASK,
