@@ -1,1 +1,17 @@
 vhvc - A Famicom Emulator
+
+- Build Instructions -
+Requirements:
+	CMake 3.18+
+	SDL 2.0.17+
+
+Instructions:
+	git submodule update --init --recursive
+	cmake -S . -B build
+	cmake --build build
+
+On Linux, it'll find SDL2 automatically. If SDL2 in your distro is too
+outdated, build and install it locally using cmake, and use this:
+	cmake -DSDL2_DIR=/usr/local/lib/cmake/SDL2 build
+On Windows, download the development libs, copy extlib/sdl2-config.cmake into
+that directory, and specify it as SDL2_DIR.
