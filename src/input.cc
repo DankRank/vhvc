@@ -4,6 +4,7 @@ namespace vhvc {
 
 struct Joy joy1 = {};
 struct Joy joy2 = {};
+static uint8_t kbd_state = 0;
 static Joy* find_joy(int id) {
 	if (joy1.joyid == id)
 		return &joy1;
@@ -42,7 +43,7 @@ void handle_input(SDL_Event* ev) {
 		break;
 	}
 	case SDL_CONTROLLERBUTTONUP:
-	case SDL_CONTROLLERBUTTONDOWN:
+	case SDL_CONTROLLERBUTTONDOWN: {
 		struct Joy* j = find_joy(ev->cdevice.which);
 		if (j) {
 			uint8_t button = 0;
@@ -64,6 +65,30 @@ void handle_input(SDL_Event* ev) {
 			}
 		}
 		break;
+	}
+	case SDL_KEYDOWN:
+	case SDL_KEYUP: {
+		uint8_t button = 0;
+		switch (ev->key.keysym.scancode) {
+		case SDL_SCANCODE_X: button = 0x01; break;
+		case SDL_SCANCODE_Z: button = 0x02; break;
+		case SDL_SCANCODE_BACKSLASH:
+		case SDL_SCANCODE_A: button = 0x04; break;
+		case SDL_SCANCODE_RETURN:
+		case SDL_SCANCODE_S: button = 0x08; break;
+		case SDL_SCANCODE_UP: button = 0x10; break;
+		case SDL_SCANCODE_DOWN: button = 0x20; break;
+		case SDL_SCANCODE_LEFT: button = 0x40; break;
+		case SDL_SCANCODE_RIGHT: button = 0x80; break;
+		}
+		if (button) {
+			if (ev->type == SDL_KEYDOWN)
+				kbd_state |= button;
+			else
+				kbd_state &= ~button;
+		}
+		break;
+	}
 	}
 }
 void input_debug(bool* p_open) {
@@ -88,6 +113,15 @@ void input_debug(bool* p_open) {
 			joy2.state & 0x04 ? 'C' : '-',
 			joy2.state & 0x02 ? 'B' : '-',
 			joy2.state & 0x01 ? 'A' : '-');
+		ImGui::Text("kbd:  %c %c %c %c %c %c %c %c",
+			kbd_state & 0x80 ? 'R' : '-',
+			kbd_state & 0x40 ? 'L' : '-',
+			kbd_state & 0x20 ? 'D' : '-',
+			kbd_state & 0x10 ? 'U' : '-',
+			kbd_state & 0x08 ? 'S' : '-',
+			kbd_state & 0x04 ? 'C' : '-',
+			kbd_state & 0x02 ? 'B' : '-',
+			kbd_state & 0x01 ? 'A' : '-');
 	}
 	ImGui::End();
 }
@@ -106,7 +140,7 @@ uint8_t read_4017() {
 }
 void write_4016(uint8_t data) {
 	if (!(out_latch & 1) && data & 1) {
-		joy1_shiftreg = joy1.state;
+		joy1_shiftreg = joy1.state | kbd_state;
 		joy2_shiftreg = joy2.state;
 	}
 	out_latch = data;
