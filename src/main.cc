@@ -157,6 +157,8 @@ void events() {
 int main(int argc, char** argv)
 {
 	palette::set_default_colors();
+
+	const char *load_on_start = "donkey_kong.nes";
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "--nestest")) {
 			File f = File::fromFile("nestest.nes", "rb");
@@ -174,10 +176,11 @@ int main(int argc, char** argv)
 			}
 			return 0;
 		}
+		if (argv[i][0] != '-')
+			load_on_start = argv[i];
 	}
 	{
-		//File f = File::fromFile("smb1.nes", "rb");
-		File f = File::fromFile("donkey_kong.nes", "rb");
+		File f = File::fromFile(load_on_start, "rb");
 		if (f) {
 			std::vector<uint8_t> buf;
 			if (f.readInto(buf))
