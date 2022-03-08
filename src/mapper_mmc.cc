@@ -5,8 +5,8 @@
 namespace vhvc {
 #define DECLARE_MAPPER(T) \
 	template<> Mapper *new_mapper<T>(NesFile &nf) { return new T(nf); }
-#define DECLARE_MAPPER_BOOL(T) \
-	template<> Mapper *new_mapper<T>(NesFile &nf, bool param) { return new T(nf, param); }
+#define DECLARE_MAPPER_INT(T) \
+	template<> Mapper *new_mapper<T>(NesFile &nf, int param) { return new T(nf, param); }
 struct MMC1 : BasicMapper {
 	int reg = 0;
 	int bitn = 0;
@@ -165,9 +165,9 @@ struct MMC2 : BasicMapper {
 		}
 		return rv;
 	}
-	MMC2(NesFile& nf, bool isMMC4) :BasicMapper(nf), isMMC4(isMMC4) {}
+	MMC2(NesFile& nf, int isMMC4) :BasicMapper(nf), isMMC4(isMMC4) {}
 };
-DECLARE_MAPPER_BOOL(MMC2)
+DECLARE_MAPPER_INT(MMC2)
 struct DxROM : BasicMapper {
 	int cur_reg = 0;
 	void poweron() {

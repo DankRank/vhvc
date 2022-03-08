@@ -3,8 +3,8 @@
 namespace vhvc {
 #define DECLARE_MAPPER(T) \
 	template<> Mapper *new_mapper<T>(NesFile &nf) { return new T(nf); }
-#define DECLARE_MAPPER_BOOL(T) \
-	template<> Mapper *new_mapper<T>(NesFile &nf, bool param) { return new T(nf, param); }
+#define DECLARE_MAPPER_INT(T) \
+	template<> Mapper *new_mapper<T>(NesFile &nf, int param) { return new T(nf, param); }
 struct NROM : BasicMapper {
 	void poweron() {
 		set_prg8k(0, nf->get_prg8k(0));
@@ -42,9 +42,9 @@ struct UxROM : LatchMapper<UxROM> {
 	void on_latch(uint8_t data) {
 		set_prg16k(0, nf->get_prg16k(data));
 	}
-	UxROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
+	UxROM(NesFile& nf, int bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
-DECLARE_MAPPER_BOOL(UxROM)
+DECLARE_MAPPER_INT(UxROM)
 struct CNROM : LatchMapper<CNROM> {
 	void poweron() {
 		set_prg16k(0, nf->get_prg16k(0));
@@ -56,9 +56,9 @@ struct CNROM : LatchMapper<CNROM> {
 	void on_latch(uint8_t data) {
 		set_chr8k(nf->get_chr8k(data));
 	}
-	CNROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
+	CNROM(NesFile& nf, int bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
-DECLARE_MAPPER_BOOL(CNROM)
+DECLARE_MAPPER_INT(CNROM)
 struct AxROM : LatchMapper<AxROM> {
 	void poweron() {
 		set_prg32k(nf->get_prg32k(-1));
@@ -70,9 +70,9 @@ struct AxROM : LatchMapper<AxROM> {
 		set_mirroring(data & 0x10 ? MIRRORING_SCREENB : MIRRORING_SCREENA);
 		set_prg32k(nf->get_prg32k(data&7));
 	}
-	AxROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
+	AxROM(NesFile& nf, int bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
-DECLARE_MAPPER_BOOL(AxROM)
+DECLARE_MAPPER_INT(AxROM)
 struct ColorDreams : LatchMapper<ColorDreams> {
 	void poweron() {
 		set_prg32k(nf->get_prg32k(0));
@@ -84,9 +84,9 @@ struct ColorDreams : LatchMapper<ColorDreams> {
 		set_prg32k(nf->get_prg32k(data&3));
 		set_chr8k(nf->get_chr8k(data>>4));
 	}
-	ColorDreams(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
+	ColorDreams(NesFile& nf, int bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
-DECLARE_MAPPER_BOOL(ColorDreams)
+DECLARE_MAPPER_INT(ColorDreams)
 struct GxROM : LatchMapper<GxROM> {
 	void poweron() {
 		set_prg32k(nf->get_prg32k(0));
@@ -98,9 +98,9 @@ struct GxROM : LatchMapper<GxROM> {
 		set_prg32k(nf->get_prg32k(data>>4 & 3));
 		set_chr8k(nf->get_chr8k(data&3));
 	}
-	GxROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
+	GxROM(NesFile& nf, int bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
-DECLARE_MAPPER_BOOL(GxROM)
+DECLARE_MAPPER_INT(GxROM)
 struct BNROM : LatchMapper<BNROM> {
 	void poweron() {
 		set_prg32k(nf->get_prg32k(0));
@@ -111,9 +111,9 @@ struct BNROM : LatchMapper<BNROM> {
 	void on_latch(uint8_t data) {
 		set_prg32k(nf->get_prg32k(data&3));
 	}
-	BNROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
+	BNROM(NesFile& nf, int bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
-DECLARE_MAPPER_BOOL(BNROM)
+DECLARE_MAPPER_INT(BNROM)
 struct NINA001 : BasicMapper {
 	void poweron() {
 		set_prg32k(nf->get_prg32k(0));
@@ -144,9 +144,9 @@ struct CPROM : LatchMapper<CPROM> {
 	void on_latch(uint8_t data) {
 		set_chr4k(1, nf->get_chr4k(data&3));
 	}
-	CPROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
+	CPROM(NesFile& nf, int bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
-DECLARE_MAPPER_BOOL(CPROM)
+DECLARE_MAPPER_INT(CPROM)
 struct UN1ROM : LatchMapper<UN1ROM> {
 	void poweron() {
 		set_prg16k(0, nf->get_prg16k(0));
@@ -158,9 +158,9 @@ struct UN1ROM : LatchMapper<UN1ROM> {
 	void on_latch(uint8_t data) {
 		set_prg16k(0, nf->get_prg16k(data>>2 & 7));
 	}
-	UN1ROM(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
+	UN1ROM(NesFile& nf, int bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
-DECLARE_MAPPER_BOOL(UN1ROM)
+DECLARE_MAPPER_INT(UN1ROM)
 struct UNROM_AND : LatchMapper<UNROM_AND> {
 	void poweron() {
 		set_prg16k(0, nf->get_prg16k(0));
@@ -172,7 +172,7 @@ struct UNROM_AND : LatchMapper<UNROM_AND> {
 	void on_latch(uint8_t data) {
 		set_prg16k(1, nf->get_prg16k(data&7));
 	}
-	UNROM_AND(NesFile& nf, bool bus_conflict) :LatchMapper(nf, bus_conflict) {}
+	UNROM_AND(NesFile& nf, int bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
-DECLARE_MAPPER_BOOL(UNROM_AND)
+DECLARE_MAPPER_INT(UNROM_AND)
 }

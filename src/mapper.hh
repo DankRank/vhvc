@@ -53,6 +53,14 @@ namespace vhvc {
 	template<typename T>
 	Mapper *new_mapper(NesFile &nf);
 	template<typename T>
-	Mapper *new_mapper(NesFile &nf, bool param);
+	Mapper *new_mapper(NesFile &nf, int param);
+	enum MapperVariant {
+		// discrete logic mappers
+		NO_BUS_CONFLICTS = 0,
+		HAS_BUS_CONFLICTS = 1,
+		// MMC2/MMC4
+		VARIANT_MMC2 = 0,
+		VARIANT_MMC4 = 1,
+	};
 }
 #endif
