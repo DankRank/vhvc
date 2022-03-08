@@ -14,7 +14,8 @@ vhvc - A Famicom Emulator
 	CPROM (13)
 	BNROM (34)
 	GxROM (66)
-	UN1ROM (66)
+	VRC1 (75)
+	UN1ROM (94)
 	UNROM AND-logic (180)
 	DxROM (206)
 

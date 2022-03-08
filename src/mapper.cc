@@ -138,6 +138,7 @@ struct MMC2;
 struct DxROM;
 struct MMC3;
 struct MMC5;
+struct VRC1;
 void mapper_cleanup() {
 	if (mapper != &noop_mapper)
 		delete mapper;
@@ -169,6 +170,7 @@ void mapper_setup(NesFile& nf) {
 	case MAPNO(34, 1): mapper = new_mapper<NINA001>(nf); break;
 	case MAPNO(34, 2): mapper = new_mapper<BNROM>(nf, true); break;
 	case MAPNO(66, 0): mapper = new_mapper<GxROM>(nf, false); break;
+	case MAPNO(75, 0): mapper = new_mapper<VRC1>(nf); break;
 	case MAPNO(94, 0): mapper = new_mapper<UN1ROM>(nf, true); break;
 	case MAPNO(180, 0): mapper = new_mapper<UNROM_AND>(nf, true); break;
 	case MAPNO(206, 0): mapper = new_mapper<DxROM>(nf); break;
