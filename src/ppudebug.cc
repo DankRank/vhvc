@@ -150,6 +150,16 @@ bool init(SDL_Renderer *renderer) {
 	}
 	return true;
 }
+void draw_ppu_texture() {
+	void* pixels;
+	int pitch;
+	SDL_LockTexture(ppu_texture, NULL, &pixels, &pitch);
+	for (int y = 0; y < 240; y++) {
+		uint32_t* pp = add_lines(pixels, pitch, y);
+		memcpy(pp, &ppu::framebuffer[256*y], 256*sizeof(uint32_t));
+	}
+	SDL_UnlockTexture(ppu_texture);
+}
 void gui() {
 	if (show_pt_window) {
 		if (ImGui::Begin("Pattern Tables", &show_pt_window)) {
@@ -181,14 +191,7 @@ void gui() {
 		ImGui::End();
 	}
 	if (show_ppu_output) {
-		void* pixels;
-		int pitch;
-		SDL_LockTexture(ppu_texture, NULL, &pixels, &pitch);
-		for (int y = 0; y < 240; y++) {
-			uint32_t* pp = add_lines(pixels, pitch, y);
-			memcpy(pp, &ppu::framebuffer[256*y], 256*sizeof(uint32_t));
-		}
-		SDL_UnlockTexture(ppu_texture);
+		draw_ppu_texture();
 		if (ImGui::Begin("PPU Output", &show_ppu_output)) {
 			ImGui::Image(ppu_texture, ImVec2{ 256 * 2, 240 * 2 });
 		}

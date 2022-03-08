@@ -23,6 +23,22 @@ bool run_cpu = false;
 bool show_file_input = false;
 bool show_mapper_debug = false;
 char filename[512];
+void events_basic() {
+	SDL_Event ev;
+	while (SDL_PollEvent(&ev)) {
+		handle_input(&ev);
+		if (ev.type == SDL_QUIT) {
+			is_running = false;
+			break;
+		}
+	}
+	ppudebug::draw_ppu_texture();
+	SDL_RenderClear(renderer);
+	SDL_RenderCopy(renderer, ppudebug::ppu_texture, NULL, NULL);
+	SDL_RenderPresent(renderer);
+	cpu::step(29580);
+	audio::flip();
+}
 void events() {
 	SDL_Event ev;
 	while (SDL_PollEvent(&ev)) {
@@ -159,6 +175,7 @@ int main(int argc, char** argv)
 	palette::set_default_colors();
 
 	const char *load_on_start = "donkey_kong.nes";
+	bool basic_mode = false;
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "--nestest")) {
 			File f = File::fromFile("nestest.nes", "rb");
@@ -176,6 +193,8 @@ int main(int argc, char** argv)
 			}
 			return 0;
 		}
+		if (!strcmp(argv[i], "--basic"))
+			basic_mode = true;
 		if (argv[i][0] != '-')
 			load_on_start = argv[i];
 	}
@@ -195,7 +214,9 @@ int main(int argc, char** argv)
 		fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
 		return 1;
 	}
-	window = SDL_CreateWindow("vhvc", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 960,
+	int w = basic_mode ? 512 : 1280;
+	int h = basic_mode ? 480 : 960;
+	window = SDL_CreateWindow("vhvc", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h,
 		SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 	if (!window) {
 		fprintf(stderr, "SDL_CreateWindow: %s\n", SDL_GetError());
@@ -214,19 +235,23 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGui::StyleColorsDark();
-	ImGui_ImplSDL2_InitForSDLRenderer(window);
-	ImGui_ImplSDLRenderer_Init(renderer);
-
-	while (is_running) {
-		events();
+	if (!basic_mode) {
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGui::StyleColorsDark();
+		ImGui_ImplSDL2_InitForSDLRenderer(window);
+		ImGui_ImplSDLRenderer_Init(renderer);
 	}
 
-	ImGui_ImplSDLRenderer_Shutdown();
-	ImGui_ImplSDL2_Shutdown();
-	ImGui::DestroyContext();
+	while (is_running) {
+		basic_mode ? events_basic() : events();
+	}
+
+	if (!basic_mode) {
+		ImGui_ImplSDLRenderer_Shutdown();
+		ImGui_ImplSDL2_Shutdown();
+		ImGui::DestroyContext();
+	}
 
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
