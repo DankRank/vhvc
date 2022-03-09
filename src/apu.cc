@@ -291,6 +291,7 @@ DMC dmc{};
 bool five_step = false;
 bool interrupt_inhibit = true;
 int frame_counter = 0;
+int delay_4017 = 0;
 void do_cycle() {
 	// FIXME: ugly
 
@@ -320,6 +321,15 @@ void do_cycle() {
 		quarter_clock = true; half_clock = true;
 		frame_counter = 0;
 		break;
+	}
+	if ((frame_counter & 1) == 1) {
+		if (delay_4017 && !--delay_4017) {
+			frame_counter = 0;
+			if (five_step) {
+				quarter_clock = true;
+				half_clock = true;
+			}
+		}
 	}
 	if (half_clock) {
 		pulse1.sweep_tick();
@@ -464,10 +474,10 @@ void reg_write(uint16_t addr, uint8_t data) {
 	case 0x4017:
 		five_step = data & 0x80;
 		interrupt_inhibit = data & 0x40;
+		if (interrupt_inhibit)
+			irq_ack(IRQ_FRAMECOUNTER);
 		// FIXME: the following stuff should be delayed by 3 or 4 cycles
-		frame_counter = 0;
-		quarter_clock = true;
-		half_clock = true;
+		delay_4017 = 2;
 		break;
 	}
 }

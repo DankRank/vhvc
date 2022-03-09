@@ -27,6 +27,8 @@ void events_basic() {
 	SDL_Event ev;
 	while (SDL_PollEvent(&ev)) {
 		handle_input(&ev);
+		if (ev.type == SDL_KEYDOWN && ev.key.keysym.scancode == SDL_SCANCODE_Q)
+			is_running = false;
 		if (ev.type == SDL_QUIT) {
 			is_running = false;
 			break;

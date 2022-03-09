@@ -173,6 +173,7 @@ jam:
 			CIRQ(); \
 		} else { \
 			interrupt_pending = false; /* FIXME: this is almost certainly wrong */ \
+			CIRQ(); \
 		} \
 		pc += int8_t(b1); \
 	} \
