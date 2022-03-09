@@ -15,6 +15,7 @@ vhvc - A Famicom Emulator
 	VRC2 / VRC4 (21, 22, 23, 25)
 	BNROM (34)
 	GxROM (66)
+	VRC3 (73)
 	VRC1 (75)
 	UN1ROM (94)
 	UNROM AND-logic (180)

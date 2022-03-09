@@ -50,7 +50,7 @@ struct VRCIRQ {
 	bool mode = false;
 	bool enabled = false;
 	bool enabled_after_ack = false;
-	int counter = 0;
+	uint8_t counter = 0;
 	int prescaler = 341;
 	void write_ctrl(uint8_t data) {
 		irq_ack(IRQ_MAPPER);
@@ -201,4 +201,60 @@ struct VRC2 : BasicMapper {
 	VRC2(NesFile& nf, int variant) :BasicMapper(nf), v(variants[variant]) {}
 };
 DECLARE_MAPPER_INT(VRC2)
+struct VRC3 : BasicMapper {
+	uint16_t latch = 0;
+	bool mode = false;
+	bool enabled = false;
+	bool enabled_after_ack = false;
+	uint16_t counter = 0;
+	void irq_tick() {
+		if (enabled) {
+			if (mode ? counter&0xFF == 0xFF : counter == 0xFFFF) {
+				irq_raise(IRQ_MAPPER);
+				if (mode)
+					counter = counter&0xFF00 | latch&0x00FF;
+				else
+					counter = latch;
+			} else {
+				counter++;
+			}
+		}
+	}
+	void poweron() {
+		set_prg16k(0, nf->get_prg16k(0));
+		set_prg16k(1, nf->get_prg16k(-1));
+		set_chr8k(nf->get_chr8k(0));
+		chrram_check();
+		set_mirroring(nf->vertical ? MIRRORING_VERTICAL : MIRRORING_HORIZONTAL);
+	}
+	uint8_t cpu_read(uint16_t addr) {
+		irq_tick();
+		return BasicMapper::cpu_read(addr);
+	}
+	void cpu_write(uint16_t addr, uint8_t data) {
+		BasicMapper::cpu_write(addr, data);
+		irq_tick();
+		switch (addr&0xF000) {
+		case 0x8000: latch = latch&0xFFF0 | data & 0x000F; break;
+		case 0x9000: latch = latch&0xFF0F | data<<4 & 0x00F0; break;
+		case 0xA000: latch = latch&0xF0FF | data<<8 & 0x0F00; break;
+		case 0xB000: latch = latch&0x0FFF | data<<12 & 0xF000; break;
+		case 0xC000:
+			irq_ack(IRQ_MAPPER);
+			mode = data&4;
+			enabled = data&2;
+			enabled_after_ack = data&1;
+			if (enabled)
+				counter = latch;
+			break;
+		case 0xD000:
+			irq_ack(IRQ_MAPPER);
+			enabled = enabled_after_ack;
+			break;
+		case 0xF000: set_prg16k(0, nf->get_prg16k(data&7)); break;
+		}
+	}
+	VRC3(NesFile& nf) :BasicMapper(nf) {}
+};
+DECLARE_MAPPER(VRC3)
 }
