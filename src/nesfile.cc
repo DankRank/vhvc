@@ -58,7 +58,7 @@ NesFile::NesFile(std::vector<uint8_t>&& a_buf) :buf(a_buf) {
 		trainer = span_u8();
 	}
 	four_screen = header[6] & 8;
-	mapper = header[6] & 0xF0 | header[7]<<4 & 0xF00 | header[8]<<8 & 0xF000 | header[8] & 0xF;
+	mapper = header[6] & 0xF0 | header[7]<<4 & 0xF00 | header[8]<<12 & 0xF000 | header[8]>>4 & 0xF;
 
 	prgram_size = 64 << (header[10] & 0xF);
 	prgnvram_size = 64 << (header[10]>>4 & 0xF);

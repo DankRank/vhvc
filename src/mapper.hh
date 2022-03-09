@@ -61,6 +61,23 @@ namespace vhvc {
 		// MMC2/MMC4
 		VARIANT_MMC2 = 0,
 		VARIANT_MMC4 = 1,
+		// VRC2/VRC4
+		VARIANT_VRC2a = 0,
+		VARIANT_VRC2b,
+		VARIANT_VRC2c,
+		VARIANT_VRC4a,
+		VARIANT_VRC4b,
+		VARIANT_VRC4c,
+		VARIANT_VRC4d,
+		VARIANT_VRC4e,
+		VARIANT_VRC4f,
+		VARIANT_Mapper21,
+		VARIANT_Mapper23,
+		VARIANT_Mapper25,
 	};
+	template<typename T>
+	Mapper *new_mapper(NesFile &nf, MapperVariant param) {
+		return new_mapper<T>(nf, (int)param);
+	}
 }
 #endif

@@ -139,6 +139,7 @@ struct DxROM;
 struct MMC3;
 struct MMC5;
 struct VRC1;
+struct VRC2;
 void mapper_cleanup() {
 	if (mapper != &noop_mapper)
 		delete mapper;
@@ -166,6 +167,18 @@ void mapper_setup(NesFile& nf) {
 	case MAPNO(10, 0): mapper = new_mapper<MMC2>(nf, VARIANT_MMC4); break;
 	case MAPNO(11, 0): mapper = new_mapper<ColorDreams>(nf, NO_BUS_CONFLICTS); break;
 	case MAPNO(13, 0): mapper = new_mapper<CPROM>(nf, HAS_BUS_CONFLICTS); break;
+	case MAPNO(21, 0): mapper = new_mapper<VRC2>(nf, VARIANT_Mapper21); break;
+	case MAPNO(21, 1): mapper = new_mapper<VRC2>(nf, VARIANT_VRC4a); break;
+	case MAPNO(21, 2): mapper = new_mapper<VRC2>(nf, VARIANT_VRC4c); break;
+	case MAPNO(22, 0): mapper = new_mapper<VRC2>(nf, VARIANT_VRC2a); break;
+	case MAPNO(23, 0): mapper = new_mapper<VRC2>(nf, VARIANT_Mapper23); break;
+	case MAPNO(23, 1): mapper = new_mapper<VRC2>(nf, VARIANT_VRC4f); break;
+	case MAPNO(23, 2): mapper = new_mapper<VRC2>(nf, VARIANT_VRC4e); break;
+	case MAPNO(23, 3): mapper = new_mapper<VRC2>(nf, VARIANT_VRC2b); break;
+	case MAPNO(25, 0): mapper = new_mapper<VRC2>(nf, VARIANT_Mapper25); break;
+	case MAPNO(25, 1): mapper = new_mapper<VRC2>(nf, VARIANT_VRC4b); break;
+	case MAPNO(25, 2): mapper = new_mapper<VRC2>(nf, VARIANT_VRC4d); break;
+	case MAPNO(25, 3): mapper = new_mapper<VRC2>(nf, VARIANT_VRC2c); break;
 	case MAPNO(34, 0): mapper = nf.chrrom.size() > 8192 ? (Mapper*)new_mapper<NINA001>(nf) : new_mapper<BNROM>(nf, HAS_BUS_CONFLICTS); break;
 	case MAPNO(34, 1): mapper = new_mapper<NINA001>(nf); break;
 	case MAPNO(34, 2): mapper = new_mapper<BNROM>(nf, HAS_BUS_CONFLICTS); break;

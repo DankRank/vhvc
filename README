@@ -12,6 +12,7 @@ vhvc - A Famicom Emulator
 	MMC4 (10)
 	ColorDreams (11)
 	CPROM (13)
+	VRC2 / VRC4 (21, 22, 23, 25)
 	BNROM (34)
 	GxROM (66)
 	VRC1 (75)
