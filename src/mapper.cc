@@ -127,6 +127,7 @@ struct UxROM;
 struct CNROM;
 struct AxROM;
 struct ColorDreams;
+struct DeathRace;
 struct GxROM;
 struct BNROM;
 struct NINA001;
@@ -214,6 +215,7 @@ void mapper_setup(NesFile& nf) {
 	case MAPNO(94, 0): mapper = new_mapper<UN1ROM>(nf, HAS_BUS_CONFLICTS); break;
 	case MAPNO(101, 0): mapper = new_mapper<Jaleco101>(nf); break;
 	case MAPNO(140, 0): mapper = new_mapper<Jaleco140>(nf); break;
+	case MAPNO(144, 0): mapper = new_mapper<DeathRace>(nf); break;
 	case MAPNO(180, 0): mapper = new_mapper<UNROM_AND>(nf, HAS_BUS_CONFLICTS); break;
 	case MAPNO(206, 0): mapper = new_mapper<DxROM>(nf); break;
 	case MAPNO(232, 0): mapper = new_mapper<Camerica>(nf, VARIANT_CamericaQuattro); break;

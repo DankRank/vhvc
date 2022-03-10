@@ -87,6 +87,25 @@ struct ColorDreams : LatchMapper<ColorDreams> {
 	ColorDreams(NesFile& nf, int bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
 DECLARE_MAPPER_INT(ColorDreams)
+struct DeathRace : BasicMapper {
+	void poweron() {
+		set_prg32k(nf->get_prg32k(0));
+		set_chr8k(nf->get_chr8k(0));
+		chrram_check();
+		set_mirroring(nf->vertical ? MIRRORING_VERTICAL : MIRRORING_HORIZONTAL);
+	}
+	void cpu_write(uint16_t addr, uint8_t data) {
+		BasicMapper::cpu_write(addr, data);
+		if (addr & 0x8000) {
+			data |= 1;
+			data &= cpu_read(addr);
+			set_prg32k(nf->get_prg32k(data&3));
+			set_chr8k(nf->get_chr8k(data>>4));
+		}
+	}
+	DeathRace(NesFile& nf) :BasicMapper(nf) {}
+};
+DECLARE_MAPPER(DeathRace)
 struct GxROM : LatchMapper<GxROM> {
 	void poweron() {
 		set_prg32k(nf->get_prg32k(0));
