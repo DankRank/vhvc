@@ -77,6 +77,10 @@ namespace vhvc {
 		// VRC6
 		VARIANT_VRC6a = 0,
 		VARIANT_VRC6b,
+		// VRC7
+		VARIANT_Mapper85 = 0,
+		VARIANT_VRC7b,
+		VARIANT_VRC7a,
 	};
 	template<typename T>
 	Mapper *new_mapper(NesFile &nf, MapperVariant param) {

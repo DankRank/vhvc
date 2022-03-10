@@ -142,6 +142,7 @@ struct VRC1;
 struct VRC2;
 struct VRC3;
 struct VRC6;
+struct VRC7;
 void mapper_cleanup() {
 	if (mapper != &noop_mapper)
 		delete mapper;
@@ -189,6 +190,9 @@ void mapper_setup(NesFile& nf) {
 	case MAPNO(66, 0): mapper = new_mapper<GxROM>(nf, NO_BUS_CONFLICTS); break;
 	case MAPNO(73, 0): mapper = new_mapper<VRC3>(nf); break;
 	case MAPNO(75, 0): mapper = new_mapper<VRC1>(nf); break;
+	case MAPNO(85, 0): mapper = new_mapper<VRC7>(nf, VARIANT_Mapper85); break;
+	case MAPNO(85, 1): mapper = new_mapper<VRC7>(nf, VARIANT_VRC7b); break;
+	case MAPNO(85, 2): mapper = new_mapper<VRC7>(nf, VARIANT_VRC7a); break;
 	case MAPNO(94, 0): mapper = new_mapper<UN1ROM>(nf, HAS_BUS_CONFLICTS); break;
 	case MAPNO(180, 0): mapper = new_mapper<UNROM_AND>(nf, HAS_BUS_CONFLICTS); break;
 	case MAPNO(206, 0): mapper = new_mapper<DxROM>(nf); break;

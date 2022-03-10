@@ -119,7 +119,7 @@ struct VRC2 : BasicMapper {
 		set_prg8k(3, nf->get_prg8k(-1));
 		for (int i = 0; i < 8; i++)
 			set_chr1k(i, nf->get_chr1k(0));
-		set_mirroring(MIRRORING_SCREENA);
+		set_mirroring(MIRRORING_VERTICAL);
 		has_prgram = v.isVRC2c;
 	}
 	uint8_t cpu_read(uint16_t addr) {
@@ -313,4 +313,61 @@ struct VRC6 : BasicMapper {
 	VRC6(NesFile& nf, int variant) :BasicMapper(nf), swapped(variant) {}
 };
 DECLARE_MAPPER_INT(VRC6)
+struct VRC7 : BasicMapper {
+	uint16_t mask;
+	VRCIRQ irq{};
+	void poweron() {
+		set_prg8k(0, nf->get_prg8k(0));
+		set_prg8k(1, nf->get_prg8k(0));
+		set_prg8k(2, nf->get_prg8k(0));
+		set_prg8k(3, nf->get_prg8k(-1));
+		for (int i = 0; i < 8; i++)
+			set_chr1k(i, nf->get_chr1k(0));
+		set_mirroring(MIRRORING_VERTICAL);
+	}
+	uint8_t cpu_read(uint16_t addr) {
+		irq.tick();
+		return BasicMapper::cpu_read(addr);
+	}
+	void cpu_write(uint16_t addr, uint8_t data) {
+		BasicMapper::cpu_write(addr, data);
+		irq.tick();
+		switch (addr&0xF000 | (addr&mask ? 8 : 0)) {
+		case 0x8000: set_prg8k(0, nf->get_prg8k(data&63)); break;
+		case 0x8008: set_prg8k(1, nf->get_prg8k(data&63)); break;
+		case 0x9000: set_prg8k(2, nf->get_prg8k(data&63)); break;
+		case 0x9008:
+			// TODO: VRC7 audio
+			// vrc7_write(addr & 0x0020, data);
+			break;
+		case 0xA000: set_chr1k(0, nf->get_chr1k(data)); break;
+		case 0xA008: set_chr1k(1, nf->get_chr1k(data)); break;
+		case 0xB000: set_chr1k(2, nf->get_chr1k(data)); break;
+		case 0xB008: set_chr1k(3, nf->get_chr1k(data)); break;
+		case 0xC000: set_chr1k(4, nf->get_chr1k(data)); break;
+		case 0xC008: set_chr1k(5, nf->get_chr1k(data)); break;
+		case 0xD000: set_chr1k(6, nf->get_chr1k(data)); break;
+		case 0xD008: set_chr1k(7, nf->get_chr1k(data)); break;
+		case 0xE000: {
+			has_prgram = data&128;
+			// TODO: silence audio bit
+			// vrc7_silence(data & 64);
+			constexpr int mirroring_modes[4] = { MIRRORING_VERTICAL, MIRRORING_HORIZONTAL, MIRRORING_SCREENA, MIRRORING_SCREENB };
+			set_mirroring(mirroring_modes[data&3]);
+			break;
+		}
+		case 0xE008: irq.latch = data; break;
+		case 0xF000: irq.write_ctrl(data); break;
+		case 0xF008: irq.write_ack(); break;
+		}
+	}
+	VRC7(NesFile& nf, int variant) :BasicMapper(nf) {
+		switch (variant) {
+		default: mask = 0x0018; break;
+		case VARIANT_VRC7b: mask = 0x0008; break;
+		case VARIANT_VRC7a: mask = 0x0010; break;
+		}
+	}
+};
+DECLARE_MAPPER_INT(VRC7)
 }
