@@ -67,7 +67,7 @@ struct VRCIRQ {
 		enabled = enabled_after_ack;
 	}
 	void tick() {
-		if (enabled) {
+		if (!bus_inspect && enabled) {
 			prescaler -= 3;
 			if (mode || prescaler <= 0) {
 				if (counter == 0xFF) {
@@ -208,7 +208,7 @@ struct VRC3 : BasicMapper {
 	bool enabled_after_ack = false;
 	uint16_t counter = 0;
 	void irq_tick() {
-		if (enabled) {
+		if (!bus_inspect && enabled) {
 			if (mode ? counter&0xFF == 0xFF : counter == 0xFFFF) {
 				irq_raise(IRQ_MAPPER);
 				if (mode)
