@@ -33,6 +33,8 @@ uint32_t cpu_cycle = 0; // TODO: probably should be a part of APU
 bool oam_dma = false;
 uint8_t oam_dma_page = 0;
 uint8_t cpu_read_basic(uint16_t addr) {
+	// FIXME: perhaps it's better to add a separate cpu_tick mapper callback?
+	uint8_t mread = mapper->cpu_read(addr);
 	if ((addr & 0xE000) == 0x0000) {
 		return cpu_ram[addr & 0x7FF];
 	} else if ((addr & 0xE000) == 0x2000) {
@@ -44,7 +46,7 @@ uint8_t cpu_read_basic(uint16_t addr) {
 	} else if (addr == 0x4017) {
 		return bus_inspect ? cpu::data_bus : read_4017() & 0x1F | cpu::data_bus & 0xE0;
 	}
-	return mapper->cpu_read(addr);
+	return mread;
 }
 uint8_t cpu_read(uint16_t addr) {
 	uint8_t rv = cpu_read_basic(addr);
