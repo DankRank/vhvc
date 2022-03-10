@@ -87,6 +87,12 @@ namespace vhvc {
 		VARIANT_CamericaQuattro, // BF9096
 		VARIANT_CamericaAladdin,
 		VARIANT_CamericaCompat,
+		// Jaleco078
+		VARIANT_CosmoCarrier = 0,
+		VARIANT_HolyDiver,
+		// Jaleco072_092
+		VARIANT_Jaleco072 = 0,
+		VARIANT_Jaleco092,
 	};
 	template<typename T>
 	Mapper *new_mapper(NesFile &nf, MapperVariant param) {
