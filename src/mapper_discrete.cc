@@ -175,4 +175,55 @@ struct UNROM_AND : LatchMapper<UNROM_AND> {
 	UNROM_AND(NesFile& nf, int bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
 DECLARE_MAPPER_INT(UNROM_AND)
+struct Camerica : BasicMapper {
+	int variant;
+	int bank = 0;
+	void poweron() {
+		set_prg16k(0, nf->get_prg16k(0));
+		if (variant == VARIANT_CamericaQuattro)
+			set_prg16k(1, nf->get_prg16k(3));
+		else
+			set_prg16k(1, nf->get_prg16k(-1));
+		set_chr8k(nf->get_chr8k(0));
+		chrram_check();
+		if (variant == VARIANT_CamericaFireHawk)
+			set_mirroring(MIRRORING_SCREENA);
+		else
+			set_mirroring(nf->vertical ? MIRRORING_VERTICAL : MIRRORING_HORIZONTAL);
+	}
+	void cpu_write(uint16_t addr, uint8_t data) {
+		BasicMapper::cpu_write(addr, data);
+		if (addr >= 0xC000) {
+			switch (variant) {
+			case VARIANT_CamericaCompat: [[fallthrough]];
+			case VARIANT_CamericaBasic: bank = data&15; break;
+			case VARIANT_CamericaFireHawk: bank = data&7; break;
+			case VARIANT_CamericaQuattro: [[fallthrough]];
+			case VARIANT_CamericaAladdin: bank = bank&0x0C | data&3; break;
+			}
+			set_prg16k(0, nf->get_prg16k(bank));
+		} else if (addr >= 0x8000) {
+			switch (variant) {
+			case VARIANT_CamericaCompat:
+				if (addr < 0x9000)
+					break;
+				[[fallthrough]];
+			case VARIANT_CamericaFireHawk:
+				if (addr < 0xA000)
+					set_mirroring(data&16 ? MIRRORING_SCREENA : MIRRORING_SCREENB);
+				break;
+			case VARIANT_CamericaAladdin:
+				data = data>>1 & 0x08 | data<<1 & 0x10; // swap outer bits
+				[[fallthrough]];
+			case VARIANT_CamericaQuattro:
+				bank = data>>1 & 0x0C | bank&0x03;
+				set_prg16k(0, nf->get_prg16k(bank));
+				set_prg16k(1, nf->get_prg16k(bank&0x0C | 3));
+				break;
+			}
+		}
+	}
+	Camerica(NesFile& nf, int variant) :BasicMapper(nf), variant(variant) {}
+};
+DECLARE_MAPPER_INT(Camerica)
 }

@@ -133,6 +133,7 @@ struct NINA001;
 struct CPROM;
 struct UN1ROM;
 struct UNROM_AND;
+struct Camerica;
 struct MMC1;
 struct MMC2;
 struct DxROM;
@@ -188,6 +189,8 @@ void mapper_setup(NesFile& nf) {
 	case MAPNO(34, 1): mapper = new_mapper<NINA001>(nf); break;
 	case MAPNO(34, 2): mapper = new_mapper<BNROM>(nf, HAS_BUS_CONFLICTS); break;
 	case MAPNO(66, 0): mapper = new_mapper<GxROM>(nf, NO_BUS_CONFLICTS); break;
+	case MAPNO(71, 0): mapper = new_mapper<Camerica>(nf, nf.is_ines ? VARIANT_CamericaCompat : VARIANT_CamericaBasic); break;
+	case MAPNO(71, 1): mapper = new_mapper<Camerica>(nf, VARIANT_CamericaFireHawk); break;
 	case MAPNO(73, 0): mapper = new_mapper<VRC3>(nf); break;
 	case MAPNO(75, 0): mapper = new_mapper<VRC1>(nf); break;
 	case MAPNO(85, 0): mapper = new_mapper<VRC7>(nf, VARIANT_Mapper85); break;
@@ -196,6 +199,8 @@ void mapper_setup(NesFile& nf) {
 	case MAPNO(94, 0): mapper = new_mapper<UN1ROM>(nf, HAS_BUS_CONFLICTS); break;
 	case MAPNO(180, 0): mapper = new_mapper<UNROM_AND>(nf, HAS_BUS_CONFLICTS); break;
 	case MAPNO(206, 0): mapper = new_mapper<DxROM>(nf); break;
+	case MAPNO(232, 0): mapper = new_mapper<Camerica>(nf, VARIANT_CamericaQuattro); break;
+	case MAPNO(232, 1): mapper = new_mapper<Camerica>(nf, VARIANT_CamericaAladdin); break;
 	}
 }
 }

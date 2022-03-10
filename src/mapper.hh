@@ -81,6 +81,12 @@ namespace vhvc {
 		VARIANT_Mapper85 = 0,
 		VARIANT_VRC7b,
 		VARIANT_VRC7a,
+		// Camerica
+		VARIANT_CamericaBasic = 0, // BF9093
+		VARIANT_CamericaFireHawk, // BF9097
+		VARIANT_CamericaQuattro, // BF9096
+		VARIANT_CamericaAladdin,
+		VARIANT_CamericaCompat,
 	};
 	template<typename T>
 	Mapper *new_mapper(NesFile &nf, MapperVariant param) {
