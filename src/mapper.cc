@@ -141,6 +141,7 @@ struct MMC5;
 struct VRC1;
 struct VRC2;
 struct VRC3;
+struct VRC6;
 void mapper_cleanup() {
 	if (mapper != &noop_mapper)
 		delete mapper;
@@ -176,10 +177,12 @@ void mapper_setup(NesFile& nf) {
 	case MAPNO(23, 1): mapper = new_mapper<VRC2>(nf, VARIANT_VRC4f); break;
 	case MAPNO(23, 2): mapper = new_mapper<VRC2>(nf, VARIANT_VRC4e); break;
 	case MAPNO(23, 3): mapper = new_mapper<VRC2>(nf, VARIANT_VRC2b); break;
+	case MAPNO(24, 0): mapper = new_mapper<VRC6>(nf, VARIANT_VRC6a); break;
 	case MAPNO(25, 0): mapper = new_mapper<VRC2>(nf, VARIANT_Mapper25); break;
 	case MAPNO(25, 1): mapper = new_mapper<VRC2>(nf, VARIANT_VRC4b); break;
 	case MAPNO(25, 2): mapper = new_mapper<VRC2>(nf, VARIANT_VRC4d); break;
 	case MAPNO(25, 3): mapper = new_mapper<VRC2>(nf, VARIANT_VRC2c); break;
+	case MAPNO(26, 0): mapper = new_mapper<VRC6>(nf, VARIANT_VRC6b); break;
 	case MAPNO(34, 0): mapper = nf.chrrom.size() > 8192 ? (Mapper*)new_mapper<NINA001>(nf) : new_mapper<BNROM>(nf, HAS_BUS_CONFLICTS); break;
 	case MAPNO(34, 1): mapper = new_mapper<NINA001>(nf); break;
 	case MAPNO(34, 2): mapper = new_mapper<BNROM>(nf, HAS_BUS_CONFLICTS); break;

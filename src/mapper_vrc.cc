@@ -257,4 +257,60 @@ struct VRC3 : BasicMapper {
 	VRC3(NesFile& nf) :BasicMapper(nf) {}
 };
 DECLARE_MAPPER(VRC3)
+struct VRC6 : BasicMapper {
+	bool swapped;
+	uint8_t mode = 0;
+	uint8_t cr[8] = {0};
+	VRCIRQ irq{};
+	void poweron() {
+		set_prg16k(0, nf->get_prg16k(0));
+		set_prg8k(2, nf->get_prg8k(0));
+		set_prg8k(3, nf->get_prg8k(-1));
+		update_mapping();
+	}
+	void update_mapping() {
+		if ((mode & 3) == 0) {
+			for (int i = 0; i < 8; i++)
+				set_chr1k(i, nf->get_chr1k(cr[i]));
+			constexpr int mirroring_modes[4] = { MIRRORING_VERTICAL, MIRRORING_HORIZONTAL, MIRRORING_SCREENA, MIRRORING_SCREENB };
+			set_mirroring(mirroring_modes[mode>>2 & 3]);
+			// TODO: ROM nametables
+			// TODO: bit 5
+		}
+		// TODO: other modes
+	}
+	uint8_t cpu_read(uint16_t addr) {
+		irq.tick();
+		return BasicMapper::cpu_read(addr);
+	}
+	void cpu_write(uint16_t addr, uint8_t data) {
+		BasicMapper::cpu_write(addr, data);
+		irq.tick();
+		if (swapped)
+			addr = addr&0xFFFC | addr>>1 & 1 | addr<<1 & 2;
+		switch (addr&0xF003) {
+		case 0x8000: case 0x8001: case 0x8002: case 0x8003:
+			set_prg16k(0, nf->get_prg16k(data&15));
+			break;
+		case 0xC000: case 0xC001: case 0xC002: case 0xC003:
+			set_prg8k(2, nf->get_prg8k(data&31));
+			break;
+		case 0xB003:
+			has_prgram = data&128;
+			mode = data&63;
+			update_mapping();
+			break;
+		case 0xD000: case 0xD001: case 0xD002: case 0xD003:
+		case 0xE000: case 0xE001: case 0xE002: case 0xE003:
+			cr[addr>>11 & 4 | addr&3] = data;
+			update_mapping();
+			break;
+		case 0xF000: irq.latch = data; break;
+		case 0xF001: irq.write_ctrl(data); break;
+		case 0xF002: irq.write_ack(); break;
+		}
+	}
+	VRC6(NesFile& nf, int variant) :BasicMapper(nf), swapped(variant) {}
+};
+DECLARE_MAPPER_INT(VRC6)
 }
