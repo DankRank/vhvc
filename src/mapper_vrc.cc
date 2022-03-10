@@ -77,7 +77,7 @@ struct VRCIRQ {
 					counter++;
 				}
 				if (prescaler <= 0)
-					prescaler = 341;
+					prescaler += 341;
 			}
 		}
 	}
