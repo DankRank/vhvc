@@ -7,6 +7,7 @@
 #include "mapper.hh"
 #include "palette.hh"
 #include "audio.hh"
+#include "state.hh"
 
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
@@ -29,6 +30,10 @@ void events_basic() {
 		handle_input(&ev);
 		if (ev.type == SDL_KEYDOWN && ev.key.keysym.scancode == SDL_SCANCODE_Q)
 			is_running = false;
+		if (ev.type == SDL_KEYDOWN && ev.key.keysym.scancode == SDL_SCANCODE_G) {
+			LogState st;
+			cpu::state(st);
+		}
 		if (ev.type == SDL_QUIT) {
 			is_running = false;
 			break;

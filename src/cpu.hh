@@ -1,6 +1,7 @@
 #ifndef VHVC_CPU
 #define VHVC_CPU
 #include "common.hh"
+#include "state.hh"
 namespace vhvc::cpu {
 	extern uint8_t a;
 	extern uint8_t x;
@@ -23,6 +24,7 @@ namespace vhvc::cpu {
 	extern bool N;
 	extern bool exit_requested;
 	static constexpr uint8_t B_FLAG = 1 << 4;
+	void state(IState &st);
 	uint8_t get_flags();
 	void set_flags(uint8_t f);
 	void set_nmi(bool state);

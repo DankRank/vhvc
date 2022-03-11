@@ -24,6 +24,14 @@ bool D = false;
 bool V = false;
 bool N = false;
 bool exit_requested = false;
+void state(IState &st) {
+	st
+		<"a"> a
+		<"x"> x
+		<"y"> y
+		<"s"> s
+		<"pc"> pc;
+}
 uint8_t get_flags() {
 	return int(C) | int(Z) << 1 | int(I) << 2 | int(D) << 3 | 1 << 5 | int(V) << 6 | int(N) << 7;
 }
