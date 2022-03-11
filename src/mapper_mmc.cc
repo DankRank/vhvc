@@ -3,10 +3,6 @@
 #include "ppu.hh"
 #include "imgui.h"
 namespace vhvc {
-#define DECLARE_MAPPER(T) \
-	template<> Mapper *new_mapper<T>(NesFile &nf) { return new T(nf); }
-#define DECLARE_MAPPER_INT(T) \
-	template<> Mapper *new_mapper<T>(NesFile &nf, int param) { return new T(nf, param); }
 struct MMC1 : BasicMapper {
 	int reg = 0;
 	int bitn = 0;

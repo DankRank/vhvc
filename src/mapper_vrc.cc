@@ -2,10 +2,6 @@
 #include "bus.hh"
 #include <utility>
 namespace vhvc {
-#define DECLARE_MAPPER(T) \
-	template<> Mapper *new_mapper<T>(NesFile &nf) { return new T(nf); }
-#define DECLARE_MAPPER_INT(T) \
-	template<> Mapper *new_mapper<T>(NesFile &nf, int param) { return new T(nf, param); }
 struct VRC1 : BasicMapper {
 	uint8_t chr0 = 0;
 	uint8_t chr1 = 0;
@@ -143,7 +139,8 @@ struct VRC2 : BasicMapper {
 		if (v.swapped)
 			low_bits = low_bits>>1 | low_bits<<1 & 2;
 		//printf("%04X = %02X || %04X\n", addr, data, addr&0xF000 | low_bits);
-		switch(addr&0xF000 | low_bits) {
+		addr = addr&0xF000 | low_bits;
+		switch(addr) {
 		case 0x8000: case 0x8001: case 0x8002: case 0x8003:
 			set_prg8k(swap_mode ? 2 : 0, nf->get_prg8k(data&31));
 			break;
@@ -154,8 +151,8 @@ struct VRC2 : BasicMapper {
 		case 0xC000: case 0xC001: case 0xC002: case 0xC003:
 		case 0xD000: case 0xD001: case 0xD002: case 0xD003:
 		case 0xE000: case 0xE001: case 0xE002: case 0xE003: {
-			int reg = (addr>>11 & 0x1E | low_bits>>1 & 1) - (0xB<<1);
-			if (low_bits & 1) {
+			int reg = (regF003(addr) - regF003(0xB000))>>1;
+			if (addr & 1) {
 				chr_reg[reg] = chr_reg[reg]&0x00F | (data&0x1F)<<4;
 			} else {
 				chr_reg[reg] = chr_reg[reg]&0x1F0 | data&0x0F;
@@ -302,7 +299,7 @@ struct VRC6 : BasicMapper {
 			break;
 		case 0xD000: case 0xD001: case 0xD002: case 0xD003:
 		case 0xE000: case 0xE001: case 0xE002: case 0xE003:
-			cr[addr>>11 & 4 | addr&3] = data;
+			cr[regF003(addr) - regF003(0xD000)] = data;
 			update_mapping();
 			break;
 		case 0xF000: irq.latch = data; break;
@@ -332,22 +329,19 @@ struct VRC7 : BasicMapper {
 	void cpu_write(uint16_t addr, uint8_t data) {
 		BasicMapper::cpu_write(addr, data);
 		irq.tick();
-		switch (addr&0xF000 | (addr&mask ? 8 : 0)) {
-		case 0x8000: set_prg8k(0, nf->get_prg8k(data&63)); break;
-		case 0x8008: set_prg8k(1, nf->get_prg8k(data&63)); break;
-		case 0x9000: set_prg8k(2, nf->get_prg8k(data&63)); break;
+		addr = addr&0xF020 | (addr&mask ? 8 : 0);
+		switch (addr&0xF008) {
+		case 0x8000: case 0x8008: case 0x9000:
+			set_prg8k(regF008(addr) - regF008(0x8000), nf->get_prg8k(data&63));
+			break;
 		case 0x9008:
 			// TODO: VRC7 audio
 			// vrc7_write(addr & 0x0020, data);
 			break;
-		case 0xA000: set_chr1k(0, nf->get_chr1k(data)); break;
-		case 0xA008: set_chr1k(1, nf->get_chr1k(data)); break;
-		case 0xB000: set_chr1k(2, nf->get_chr1k(data)); break;
-		case 0xB008: set_chr1k(3, nf->get_chr1k(data)); break;
-		case 0xC000: set_chr1k(4, nf->get_chr1k(data)); break;
-		case 0xC008: set_chr1k(5, nf->get_chr1k(data)); break;
-		case 0xD000: set_chr1k(6, nf->get_chr1k(data)); break;
-		case 0xD008: set_chr1k(7, nf->get_chr1k(data)); break;
+		case 0xA000: case 0xA008: case 0xB000: case 0xB008:
+		case 0xC000: case 0xC008: case 0xD000: case 0xD008:
+			set_chr1k(regF008(addr) - regF008(0xA000), nf->get_chr1k(data));
+			break;
 		case 0xE000: {
 			has_prgram = data&128;
 			// TODO: silence audio bit

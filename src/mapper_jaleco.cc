@@ -1,10 +1,6 @@
 #include "mapper.hh"
 #include "bus.hh"
 namespace vhvc {
-#define DECLARE_MAPPER(T) \
-	template<> Mapper *new_mapper<T>(NesFile &nf) { return new T(nf); }
-#define DECLARE_MAPPER_INT(T) \
-	template<> Mapper *new_mapper<T>(NesFile &nf, int param) { return new T(nf, param); }
 struct Jaleco087 : BasicMapper {
 	void poweron() {
 		set_prg16k(0, nf->get_prg16k(0));
@@ -192,33 +188,32 @@ struct JalecoSS88006 : BasicMapper {
 			return;
 		BasicMapper::cpu_write(addr, data);
 		switch (addr&0xF003) {
-		case 0x8000: set_prg8k(0, nf->get_prg8k((prgreg[0] = prgreg[0]&0x30 | data&0x0F     ))); break;
-		case 0x8001: set_prg8k(0, nf->get_prg8k((prgreg[0] = prgreg[0]&0x0F | data<<4 & 0x30))); break;
-		case 0x8002: set_prg8k(1, nf->get_prg8k((prgreg[1] = prgreg[1]&0x30 | data&0x0F     ))); break;
-		case 0x8003: set_prg8k(1, nf->get_prg8k((prgreg[1] = prgreg[1]&0x0F | data<<4 & 0x30))); break;
-		case 0x9000: set_prg8k(2, nf->get_prg8k((prgreg[2] = prgreg[2]&0x30 | data&0x0F     ))); break;
-		case 0x9001: set_prg8k(2, nf->get_prg8k((prgreg[2] = prgreg[2]&0x0F | data<<4 & 0x30))); break;
+		case 0x8000: case 0x8001: case 0x8002: case 0x8003: case 0x9000: case 0x9001: {
+			int r = (regF003(addr) - regF003(0x8000))>>1;
+			if ((addr & 1) == 0)
+				prgreg[r] = prgreg[r]&0x30 | data&0x0F;
+			else
+				prgreg[r] = prgreg[r]&0x0F | data<<4 & 0x30;
+			set_prg8k(r, nf->get_prg8k(prgreg[r]));
+			break;
+		}
 		case 0x9002:
 			has_prgram = data&1;
 			prgram_wr_enable = data&2;
 			break;
 		case 0x9003: break;
-		case 0xA000: set_chr1k(0, nf->get_chr1k((chrreg[0] = chrreg[0]&0xF0 | data&0x0F     ))); break;
-		case 0xA001: set_chr1k(0, nf->get_chr1k((chrreg[0] = chrreg[0]&0x0F | data<<4 & 0xF0))); break;
-		case 0xA002: set_chr1k(1, nf->get_chr1k((chrreg[1] = chrreg[1]&0xF0 | data&0x0F     ))); break;
-		case 0xA003: set_chr1k(1, nf->get_chr1k((chrreg[1] = chrreg[1]&0x0F | data<<4 & 0xF0))); break;
-		case 0xB000: set_chr1k(2, nf->get_chr1k((chrreg[2] = chrreg[2]&0xF0 | data&0x0F     ))); break;
-		case 0xB001: set_chr1k(2, nf->get_chr1k((chrreg[2] = chrreg[2]&0x0F | data<<4 & 0xF0))); break;
-		case 0xB002: set_chr1k(3, nf->get_chr1k((chrreg[3] = chrreg[3]&0xF0 | data&0x0F     ))); break;
-		case 0xB003: set_chr1k(3, nf->get_chr1k((chrreg[3] = chrreg[3]&0x0F | data<<4 & 0xF0))); break;
-		case 0xC000: set_chr1k(4, nf->get_chr1k((chrreg[4] = chrreg[4]&0xF0 | data&0x0F     ))); break;
-		case 0xC001: set_chr1k(4, nf->get_chr1k((chrreg[4] = chrreg[4]&0x0F | data<<4 & 0xF0))); break;
-		case 0xC002: set_chr1k(5, nf->get_chr1k((chrreg[5] = chrreg[5]&0xF0 | data&0x0F     ))); break;
-		case 0xC003: set_chr1k(5, nf->get_chr1k((chrreg[5] = chrreg[5]&0x0F | data<<4 & 0xF0))); break;
-		case 0xD000: set_chr1k(6, nf->get_chr1k((chrreg[6] = chrreg[6]&0xF0 | data&0x0F     ))); break;
-		case 0xD001: set_chr1k(6, nf->get_chr1k((chrreg[6] = chrreg[6]&0x0F | data<<4 & 0xF0))); break;
-		case 0xD002: set_chr1k(7, nf->get_chr1k((chrreg[7] = chrreg[7]&0xF0 | data&0x0F     ))); break;
-		case 0xD003: set_chr1k(7, nf->get_chr1k((chrreg[7] = chrreg[7]&0x0F | data<<4 & 0xF0))); break;
+		case 0xA000: case 0xA001: case 0xA002: case 0xA003:
+		case 0xB000: case 0xB001: case 0xB002: case 0xB003:
+		case 0xC000: case 0xC001: case 0xC002: case 0xC003:
+		case 0xD000: case 0xD001: case 0xD002: case 0xD003: {
+			int r = (regF003(addr) - regF003(0xA000))>>1;
+			if ((addr & 1) == 0)
+				chrreg[r] = chrreg[r]&0xF0 | data&0x0F;
+			else
+				chrreg[r] = chrreg[r]&0x0F | data<<4 & 0xF0;
+			set_chr1k(r, nf->get_chr1k(chrreg[r]));
+			break;
+		}
 		case 0xE000: irq_latch = irq_latch & 0xFFF0 | data & 0x000F; break;
 		case 0xE001: irq_latch = irq_latch & 0xFF0F | data<<4 & 0x00F0; break;
 		case 0xE002: irq_latch = irq_latch & 0xF0FF | data<<8 & 0x0F00; break;

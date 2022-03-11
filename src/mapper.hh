@@ -98,5 +98,15 @@ namespace vhvc {
 	Mapper *new_mapper(NesFile &nf, MapperVariant param) {
 		return new_mapper<T>(nf, (int)param);
 	}
+#define DECLARE_MAPPER(T) \
+	template<> Mapper *new_mapper<T>(NesFile &nf) { return new T(nf); }
+#define DECLARE_MAPPER_INT(T) \
+	template<> Mapper *new_mapper<T>(NesFile &nf, int param) { return new T(nf, param); }
+	static constexpr uint16_t regF003(uint16_t addr) {
+		return addr>>10 & 0x3C | addr&3;
+	}
+	static constexpr uint16_t regF008(uint16_t addr) {
+		return addr>>11 & 0x1E | addr>>3 & 1;
+	}
 }
 #endif

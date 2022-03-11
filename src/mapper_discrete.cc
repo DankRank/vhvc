@@ -1,10 +1,6 @@
 #include "mapper.hh"
 #include "bus.hh"
 namespace vhvc {
-#define DECLARE_MAPPER(T) \
-	template<> Mapper *new_mapper<T>(NesFile &nf) { return new T(nf); }
-#define DECLARE_MAPPER_INT(T) \
-	template<> Mapper *new_mapper<T>(NesFile &nf, int param) { return new T(nf, param); }
 struct NROM : BasicMapper {
 	void poweron() {
 		set_prg8k(0, nf->get_prg8k(0));
