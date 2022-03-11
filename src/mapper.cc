@@ -142,6 +142,7 @@ struct Mapper038;
 struct Jaleco078;
 struct Jaleco072_092;
 struct Jaleco101;
+struct JalecoSS88006;
 struct MMC1;
 struct MMC2;
 struct DxROM;
@@ -179,6 +180,7 @@ void mapper_setup(NesFile& nf) {
 	case MAPNO(10, 0): mapper = new_mapper<MMC2>(nf, VARIANT_MMC4); break;
 	case MAPNO(11, 0): mapper = new_mapper<ColorDreams>(nf, NO_BUS_CONFLICTS); break;
 	case MAPNO(13, 0): mapper = new_mapper<CPROM>(nf, HAS_BUS_CONFLICTS); break;
+	case MAPNO(18, 0): mapper = new_mapper<JalecoSS88006>(nf); break;
 	case MAPNO(21, 0): mapper = new_mapper<VRC2>(nf, VARIANT_Mapper21); break;
 	case MAPNO(21, 1): mapper = new_mapper<VRC2>(nf, VARIANT_VRC4a); break;
 	case MAPNO(21, 2): mapper = new_mapper<VRC2>(nf, VARIANT_VRC4c); break;
