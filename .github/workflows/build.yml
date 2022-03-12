@@ -1,0 +1,75 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  BUILD_TYPE: Release
+  SDL2_VER: 2.0.20
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Install SDL2
+      run: |
+        sudo add-apt-repository ppa:savoury1/multimedia
+        sudo apt-get update
+        sudo apt-get install libsdl2-dev
+    - name: Configure CMake
+      run: cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+    - name: Build
+      run: cmake --build build --config ${{env.BUILD_TYPE}}
+
+  build-win32:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64, x86]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Cache SDL2
+      id: cache-sdl2
+      uses: actions/cache@v2
+      with:
+        path: |
+          SDL2-devel-${{env.SDL2_VER}}-VC.zip
+          SDL2-${{env.SDL2_VER}}-win32-${{matrix.arch}}.zip
+        key: SDL2-${{env.SDL2_VER}}-win32-${{matrix.arch}}
+    - name: Download SDL2
+      if: steps.cache-sdl2.outputs.cache-hit != 'true'
+      run: |
+        curl -OL https://libsdl.org/release/SDL2-devel-${{env.SDL2_VER}}-VC.zip
+        curl -OL https://libsdl.org/release/SDL2-${{env.SDL2_VER}}-win32-${{matrix.arch}}.zip
+    - name: Extract SDL2
+      run: |
+        7z x SDL2-devel-${{env.SDL2_VER}}-VC.zip
+        7z x SDL2-${{env.SDL2_VER}}-win32-${{matrix.arch}}.zip
+        cp extlib/sdl2-config.cmake SDL2-${{env.SDL2_VER}}/sdl2-config.cmake
+    - name: Configure CMake
+      run: cmake -B build -A ${{matrix.arch == 'x86' && 'Win32' || matrix.arch}} -DSDL2_DIR=${{github.workspace}}/SDL2-${{env.SDL2_VER}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+    - name: Build
+      run: cmake --build build --config ${{env.BUILD_TYPE}}
+    - name: Prepare Dist
+      run: |
+        mkdir dist
+        cp build/Release/vhvc.exe dist/
+        cp COPYING dist/
+        cp README dist/
+        cp SDL2.dll dist/
+        cp README-SDL.txt dist/
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: vhvc-win32-${{matrix.arch}}
+        path: dist/*
