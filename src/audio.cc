@@ -64,6 +64,8 @@ SDL_AudioDeviceID devid;
 uint8_t silence = 0;
 extern "C" void SDLCALL callback(void* userdata, Uint8* stream, int len) {
 	int nread = queue.read(stream, len);
+	if (nread)
+		silence = stream[nread-1];
 	if (nread < len)
 		memset(stream+nread, silence, len-nread);
 }
@@ -88,7 +90,7 @@ bool init() {
 		fprintf(stderr, "SDL_OpenAudio: %s\n", SDL_GetError());
 		return false;
 	}
-	silence = obtained.silence;
+	//silence = obtained.silence;
 	SDL_PauseAudioDevice(devid, 0);
 	return true;
 }
