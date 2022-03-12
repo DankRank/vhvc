@@ -144,12 +144,12 @@ struct Jaleco078;
 struct Jaleco072_092;
 struct Jaleco101;
 struct JalecoSS88006;
-struct MMC1;
-struct MMC2;
-struct DxROM;
+struct Namcot108;
 struct Namcot3453;
 struct Namcot3446;
 struct Namcot3425;
+struct MMC1;
+struct MMC2;
 struct MMC3;
 struct MMC5;
 struct VRC1;
@@ -216,7 +216,7 @@ void mapper_setup(NesFile& nf) {
 	case MAPNO(85, 0): mapper = new_mapper<VRC7>(nf, VARIANT_Mapper85); break;
 	case MAPNO(85, 1): mapper = new_mapper<VRC7>(nf, VARIANT_VRC7b); break;
 	case MAPNO(85, 2): mapper = new_mapper<VRC7>(nf, VARIANT_VRC7a); break;
-	case MAPNO(88, 0): mapper = new_mapper<DxROM>(nf, VARIANT_DxROM_SplitChr); break;
+	case MAPNO(88, 0): mapper = new_mapper<Namcot108>(nf, VARIANT_Namcot108_SplitChr); break;
 	case MAPNO(86, 0): mapper = new_mapper<Jaleco086>(nf); break;
 	case MAPNO(87, 0): mapper = new_mapper<Jaleco087>(nf); break;
 	case MAPNO(92, 0): mapper = new_mapper<Jaleco072_092>(nf, VARIANT_Jaleco092); break;
@@ -232,8 +232,8 @@ void mapper_setup(NesFile& nf) {
 	case MAPNO(185, 6): mapper = new_mapper<CNROMCopyProtection>(nf, VARIANT_CNROM_Bank2); break;
 	case MAPNO(185, 7): mapper = new_mapper<CNROMCopyProtection>(nf, VARIANT_CNROM_Bank3); break;
 	case MAPNO(154, 0): mapper = new_mapper<Namcot3453>(nf); break;
-	case MAPNO(206, 0): mapper = new_mapper<DxROM>(nf, VARIANT_DxROM_Normal); break;
-	case MAPNO(206, 1): mapper = new_mapper<DxROM>(nf, VARIANT_DxROM_FixedPrg); break;
+	case MAPNO(206, 0): mapper = new_mapper<Namcot108>(nf, VARIANT_Namcot108_Normal); break;
+	case MAPNO(206, 1): mapper = new_mapper<Namcot108>(nf, VARIANT_Namcot108_FixedPrg); break;
 	case MAPNO(232, 0): mapper = new_mapper<Camerica>(nf, VARIANT_CamericaQuattro); break;
 	case MAPNO(232, 1): mapper = new_mapper<Camerica>(nf, VARIANT_CamericaAladdin); break;
 	}

@@ -16,6 +16,7 @@ add_executable(vhvc
 	src/mapper_mmc.cc
 	src/mapper_vrc.cc
 	src/mapper_jaleco.cc
+	src/mapper_namcot108.cc
 	src/nesfile.cc src/nesfile.hh
 	src/span.hh
 	src/io.hh
