@@ -34,18 +34,19 @@ static constexpr unsigned dmc_rate_ntsc[16] = {
 static constexpr unsigned dmc_rate_pal[16] = {
 	398, 354, 316, 298, 276, 236, 210, 198, 176, 148, 132, 118,  98,  78,  66,  50
 };
+static constexpr int16_t volume = INT16_MAX * .5;
 static constexpr std::array<int16_t, 31> pulse_table_gen() {
 	std::array<int16_t, 31> tab{};
 	tab[0] = 0;
 	for (int i = 1; i < 31; i++)
-		tab[i] = (95.52 / (8128.0 / i + 100)) * 2000;
+		tab[i] = (95.52 / (8128.0 / i + 100)) * volume;
 	return tab;
 }
 static constexpr std::array<int16_t, 203> tnd_table_gen() {
 	std::array<int16_t, 203> tab{};
 	tab[0] = 0;
 	for (int i = 1; i < 203; i++)
-		tab[i] = (163.67 / (24329.0 / i + 100)) * 2000;
+		tab[i] = (163.67 / (24329.0 / i + 100)) * volume;
 	return tab;
 }
 static constexpr std::array<int16_t, 31> pulse_table = pulse_table_gen();
