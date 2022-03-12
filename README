@@ -3,8 +3,8 @@ vhvc - A Famicom Emulator
 - Supported Mappers -
 	NROM (0)
 	MMC1 (1)
-	UxROM (2)
-	CNROM (3)
+	UxROM (2, 94, 180)
+	CNROM (3, 185)
 	MMC3 (4)
 	MMC5 (5)
 	AxROM (7)
@@ -23,9 +23,7 @@ vhvc - A Famicom Emulator
 	VRC1 (75)
 	VRC7 (85)
 	Jaleco (72, 78, 86, 87, 92, 101, 140)
-	UN1ROM (94)
 	Death Race (144)
-	UNROM AND-logic (180)
 	DxROM (206)
 
 - Build Instructions -

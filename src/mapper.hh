@@ -93,6 +93,12 @@ namespace vhvc {
 		// Jaleco072_092
 		VARIANT_Jaleco072 = 0,
 		VARIANT_Jaleco092,
+		// CNROMCopyProtection
+		VARIANT_CNROM_Heur = -1,
+		VARIANT_CNROM_Bank0,
+		VARIANT_CNROM_Bank1,
+		VARIANT_CNROM_Bank2,
+		VARIANT_CNROM_Bank3,
 	};
 	template<typename T>
 	Mapper *new_mapper(NesFile &nf, MapperVariant param) {

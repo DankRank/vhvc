@@ -55,6 +55,40 @@ struct CNROM : LatchMapper<CNROM> {
 	CNROM(NesFile& nf, int bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
 DECLARE_MAPPER_INT(CNROM)
+struct CNROMCopyProtection : LatchMapper<CNROMCopyProtection> {
+	int bank;
+	bool chr_enabled = false;
+	bool is_seicross = false;
+	bool first_read = false;
+	void poweron() {
+		first_read = true;
+		set_prg16k(0, nf->get_prg16k(0));
+		set_prg16k(1, nf->get_prg16k(1));
+		set_chr8k(nf->get_chr8k(0));
+		chrram_check();
+		set_mirroring(nf->vertical ? MIRRORING_VERTICAL : MIRRORING_HORIZONTAL);
+	}
+	void on_latch(uint8_t data) {
+		// This needs more investigation, but I think an alternative heuristic could be to check
+		// if the same value gets written twice, because the games run the check in a loop.
+		// The downside is some wasted cycles compared to the real hardware.
+		if (first_read) {
+			first_read = false;
+			is_seicross = data == 0x21;
+		}
+		if (bank == -1)
+			chr_enabled = (data&15 && data != 0x13) != is_seicross;
+		else
+			chr_enabled = (data&3) == bank;
+	}
+	uint8_t ppu_read(uint16_t addr) {
+		if (addr < 0x2000 && !chr_enabled)
+			return addr&0xFF;
+		return LatchMapper::ppu_read(addr);
+	}
+	CNROMCopyProtection(NesFile& nf, int bank) :LatchMapper(nf, true), bank(bank) {}
+};
+DECLARE_MAPPER_INT(CNROMCopyProtection)
 struct AxROM : LatchMapper<AxROM> {
 	void poweron() {
 		set_prg32k(nf->get_prg32k(-1));

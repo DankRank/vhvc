@@ -125,6 +125,7 @@ bool in_range(cspan_u8 span, void* ptr) {
 struct NROM;
 struct UxROM;
 struct CNROM;
+struct CNROMCopyProtection;
 struct AxROM;
 struct ColorDreams;
 struct DeathRace;
@@ -219,6 +220,11 @@ void mapper_setup(NesFile& nf) {
 	case MAPNO(140, 0): mapper = new_mapper<Jaleco140>(nf); break;
 	case MAPNO(144, 0): mapper = new_mapper<DeathRace>(nf); break;
 	case MAPNO(180, 0): mapper = new_mapper<UNROM_AND>(nf, HAS_BUS_CONFLICTS); break;
+	case MAPNO(185, 0): mapper = new_mapper<CNROMCopyProtection>(nf, VARIANT_CNROM_Heur); break;
+	case MAPNO(185, 4): mapper = new_mapper<CNROMCopyProtection>(nf, VARIANT_CNROM_Bank0); break;
+	case MAPNO(185, 5): mapper = new_mapper<CNROMCopyProtection>(nf, VARIANT_CNROM_Bank1); break;
+	case MAPNO(185, 6): mapper = new_mapper<CNROMCopyProtection>(nf, VARIANT_CNROM_Bank2); break;
+	case MAPNO(185, 7): mapper = new_mapper<CNROMCopyProtection>(nf, VARIANT_CNROM_Bank3); break;
 	case MAPNO(206, 0): mapper = new_mapper<DxROM>(nf); break;
 	case MAPNO(232, 0): mapper = new_mapper<Camerica>(nf, VARIANT_CamericaQuattro); break;
 	case MAPNO(232, 1): mapper = new_mapper<Camerica>(nf, VARIANT_CamericaAladdin); break;
