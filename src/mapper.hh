@@ -99,6 +99,10 @@ namespace vhvc {
 		VARIANT_CNROM_Bank1,
 		VARIANT_CNROM_Bank2,
 		VARIANT_CNROM_Bank3,
+		// DxROM
+		VARIANT_DxROM_Normal = 0,
+		VARIANT_DxROM_FixedPrg,
+		VARIANT_DxROM_SplitChr,
 	};
 	template<typename T>
 	Mapper *new_mapper(NesFile &nf, MapperVariant param) {
