@@ -64,7 +64,7 @@ struct AxROM : LatchMapper<AxROM> {
 	}
 	void on_latch(uint8_t data) {
 		set_mirroring(data & 0x10 ? MIRRORING_SCREENB : MIRRORING_SCREENA);
-		set_prg32k(nf->get_prg32k(data&7));
+		set_prg32k(nf->get_prg32k(data&15));
 	}
 	AxROM(NesFile& nf, int bus_conflict) :LatchMapper(nf, bus_conflict) {}
 };
