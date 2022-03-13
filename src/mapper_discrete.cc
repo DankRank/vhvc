@@ -275,4 +275,36 @@ struct Camerica : BasicMapper {
 	Camerica(NesFile& nf, int variant) :BasicMapper(nf), variant(variant) {}
 };
 DECLARE_MAPPER_INT(Camerica)
+struct Action52 : BasicMapper {
+	bool openbus = false;
+	void poweron() {
+		set_prg16k(0, nf->get_prg16k(0));
+		set_prg16k(1, nf->get_prg16k(1));
+		set_chr8k(nf->get_chr8k(0));
+		set_mirroring(MIRRORING_VERTICAL);
+	}
+	uint8_t cpu_read(uint16_t addr) {
+		return openbus ? cpu::data_bus : BasicMapper::cpu_read(addr);
+	}
+	void cpu_write(uint16_t addr, uint8_t data) {
+		BasicMapper::cpu_write(addr, data);
+		if (addr & 0x8000) {
+			set_chr8k(nf->get_chr8k((addr&15) << 2 | data&3));
+			int bank = addr>>6 & 0x7F;
+			openbus = bank >= 0x40 && bank < 0x60;
+			if (bank >= 0x60)
+				bank -= 0x20;
+			if (addr & 0x20) {
+				set_prg16k(0, nf->get_prg16k(bank));
+				set_prg16k(1, nf->get_prg16k(bank));
+			} else {
+				set_prg16k(0, nf->get_prg16k(bank&~1));
+				set_prg16k(1, nf->get_prg16k(bank|1));
+			}
+			set_mirroring(addr&0x2000 ? MIRRORING_HORIZONTAL : MIRRORING_VERTICAL);
+		}
+	}
+	Action52(NesFile& nf) :BasicMapper(nf) {}
+};
+DECLARE_MAPPER(Action52)
 }

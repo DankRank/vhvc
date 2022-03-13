@@ -136,6 +136,7 @@ struct CPROM;
 struct UN1ROM;
 struct UNROM_AND;
 struct Camerica;
+struct Action52;
 struct Jaleco087;
 struct Jaleco140;
 struct Jaleco086;
@@ -234,6 +235,7 @@ void mapper_setup(NesFile& nf) {
 	case MAPNO(154, 0): mapper = new_mapper<Namcot3453>(nf); break;
 	case MAPNO(206, 0): mapper = new_mapper<Namcot108>(nf, VARIANT_Namcot108_Normal); break;
 	case MAPNO(206, 1): mapper = new_mapper<Namcot108>(nf, VARIANT_Namcot108_FixedPrg); break;
+	case MAPNO(228, 0): mapper = new_mapper<Action52>(nf); break;
 	case MAPNO(232, 0): mapper = new_mapper<Camerica>(nf, VARIANT_CamericaQuattro); break;
 	case MAPNO(232, 1): mapper = new_mapper<Camerica>(nf, VARIANT_CamericaAladdin); break;
 	}
