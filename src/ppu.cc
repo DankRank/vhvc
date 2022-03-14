@@ -398,7 +398,7 @@ static void advance_dot_clock() {
 		dot = 0;
 		if (line++ == 261) {
 			line = 0;
-			if ((odd_frame = !odd_frame))
+			if ((odd_frame = !odd_frame) && (bg_enable || obj_enable))
 				dot++;
 		}
 		if (ppudebug::break_on_scanline) {
