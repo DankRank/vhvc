@@ -317,7 +317,7 @@ static void do_draw() {
 			}
 			bg_shiftreg <<= 4;
 		}
-		if (dot >= 2 && dot <= 257) {
+		if (dot >= 0+2 && dot <= 254+2) {
 			if (obj_out[dot-2] & 0x40) {
 				obj0_hit = true;
 				obj_out[dot-2] &= 0x1F;
