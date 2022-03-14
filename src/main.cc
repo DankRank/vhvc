@@ -1,6 +1,7 @@
 #include "input.hh"
 #include "cpu.hh"
 #include "cpudebug.hh"
+#include "ppu.hh"
 #include "ppudebug.hh"
 #include "bus.hh"
 #include "nesfile.hh"
@@ -166,6 +167,8 @@ void events() {
 			ImGui::MenuItem("PPU Output", nullptr, &ppudebug::show_ppu_output);
 			ImGui::MenuItem("Break on Scanline", nullptr, &ppudebug::break_on_scanline);
 			ImGui::MenuItem("Break on VBlank", nullptr, &ppudebug::break_on_vblank);
+			if (ImGui::MenuItem("Trigger SZH"))
+				ppu::obj0_hit = true;
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Tools")) {
