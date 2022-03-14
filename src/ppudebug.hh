@@ -7,6 +7,7 @@ namespace vhvc::ppudebug {
 	extern bool show_pal_window;
 	extern bool show_ppu_output;
 	extern bool show_ppu_state;
+	extern bool sync_to_vblank;
 	extern bool break_on_scanline;
 	extern bool break_on_vblank;
 	extern SDL_Texture* ppu_texture;

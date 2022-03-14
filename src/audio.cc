@@ -1,4 +1,5 @@
 #include "audio.hh"
+#include "cpu.hh"
 #include <stdio.h>
 namespace vhvc::audio {
 // The easy way would be to just use SDL_QueueAudio, but it holds the audio mutex,
@@ -59,7 +60,7 @@ struct audio_queue {
 		read_pending = write_pending = 0;
 	}
 };
-audio_queue<4096*3*2> queue; // FIXME: figure out an optimal size (probably some multiple of 1600 (48000/60*2))
+audio_queue<48000/60*2*2> queue;
 SDL_AudioDeviceID devid;
 uint8_t silence = 0;
 extern "C" void SDLCALL callback(void* userdata, Uint8* stream, int len) {
@@ -69,6 +70,7 @@ extern "C" void SDLCALL callback(void* userdata, Uint8* stream, int len) {
 	if (nread < len)
 		memset(stream+nread, silence, len-nread);
 }
+bool sync_to_audio = true;
 void flip() {
 	SDL_LockAudioDevice(devid);
 	queue.flip();
@@ -76,6 +78,8 @@ void flip() {
 }
 void enqueue(int16_t sample) {
 	queue.write((uint8_t*)&sample, sizeof(sample));
+	if (!queue.write_left && sync_to_audio)
+		cpu::exit_requested = true;
 }
 bool init() {
 	SDL_AudioSpec desired, obtained;
@@ -83,7 +87,7 @@ bool init() {
 	desired.freq = 48000;
 	desired.format = AUDIO_S16SYS;
 	desired.channels = 1;
-	desired.samples = 4096;
+	desired.samples = 48000/60;
 	desired.callback = callback;
 	devid = SDL_OpenAudioDevice(NULL, false, &desired, &obtained, 0);
 	if (!devid) {

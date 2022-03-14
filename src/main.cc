@@ -24,6 +24,18 @@ bool run_cpu = false;
 bool show_file_input = false;
 bool show_mapper_debug = false;
 char filename[512];
+int sync_type = 1;
+enum {
+	SYNC_TO_VSYNC,
+	SYNC_TO_AUDIO,
+	SYNC_TO_NOTHING,
+};
+void set_sync_type(int type) {
+	sync_type = type;
+	SDL_RenderSetVSync(renderer, type == SYNC_TO_VSYNC);
+	ppudebug::sync_to_vblank = type != SYNC_TO_AUDIO;
+	audio::sync_to_audio = type == SYNC_TO_AUDIO;
+}
 void events_basic() {
 	SDL_Event ev;
 	while (SDL_PollEvent(&ev)) {
@@ -138,6 +150,12 @@ void events() {
 			ImGui::MenuItem("Run CPU", nullptr, &run_cpu);
 			ImGui::MenuItem("CPU State", nullptr, &cpudebug::show_cpu_state);
 			ImGui::MenuItem("CPU Memory", nullptr, &cpudebug::show_cpu_memory);
+			if (ImGui::MenuItem("Sync to VSync", nullptr, sync_type == SYNC_TO_VSYNC))
+				set_sync_type(SYNC_TO_VSYNC);
+			if (ImGui::MenuItem("Sync to Audio", nullptr, sync_type == SYNC_TO_AUDIO))
+				set_sync_type(SYNC_TO_AUDIO);
+			if (ImGui::MenuItem("Don't Sync", nullptr, sync_type == SYNC_TO_NOTHING))
+				set_sync_type(SYNC_TO_NOTHING);
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("PPU")) {
@@ -166,15 +184,8 @@ void events() {
 	ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 	SDL_RenderPresent(renderer);
 
-	// FIXME: curerently relying on vsync for timing
-	//static uint64_t start = SDL_GetTicks();
-	//uint64_t now = SDL_GetTicks();
-	//if (now - start > 16) {
 	if (run_cpu)
 		cpu::step(29580);
-		//while (now - start > 16)
-		//	start += 16;
-	//}
 	audio::flip();
 }
 int main(int argc, char** argv)
@@ -229,11 +240,12 @@ int main(int argc, char** argv)
 		fprintf(stderr, "SDL_CreateWindow: %s\n", SDL_GetError());
 		return 1;
 	}
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	if (!renderer) {
 		fprintf(stderr, "SDL_CreateRenderer: %s\n", SDL_GetError());
 		return 1;
 	}
+	set_sync_type(SYNC_TO_AUDIO);
 
 	if (!audio::init())
 		return 1;

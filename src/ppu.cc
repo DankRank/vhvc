@@ -380,7 +380,8 @@ static void update_flags() {
 	if (line == 241 && dot == 1) {
 		in_vblank = true;
 		cpu::set_nmi(nmi_enabled);
-		cpu::exit_requested = true;
+		if (ppudebug::sync_to_vblank || ppudebug::break_on_vblank)
+			cpu::exit_requested = true;
 		if (ppudebug::break_on_vblank)
 			run_cpu = false;
 	}

@@ -125,6 +125,7 @@ bool show_nt_window = true;
 bool show_pal_window = false;
 bool show_ppu_output = true;
 bool show_ppu_state = false;
+bool sync_to_vblank = false;
 bool break_on_scanline = false;
 bool break_on_vblank = false;
 bool init(SDL_Renderer *renderer) {
