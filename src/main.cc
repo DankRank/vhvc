@@ -56,7 +56,8 @@ void events_basic() {
 	SDL_RenderClear(renderer);
 	SDL_RenderCopy(renderer, ppudebug::ppu_texture, NULL, NULL);
 	SDL_RenderPresent(renderer);
-	cpu::step(29580);
+	if (audio::need_frame())
+		cpu::step(29580);
 	audio::flip();
 }
 void events() {
@@ -187,7 +188,7 @@ void events() {
 	ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 	SDL_RenderPresent(renderer);
 
-	if (run_cpu)
+	if (run_cpu && audio::need_frame())
 		cpu::step(29580);
 	audio::flip();
 }

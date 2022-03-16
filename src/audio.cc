@@ -60,25 +60,31 @@ struct audio_queue {
 		read_pending = write_pending = 0;
 	}
 };
-audio_queue<48000/60*2*2> queue;
+audio_queue<48000/60*2*3> queue;
 SDL_AudioDeviceID devid;
 uint8_t silence = 0;
 extern "C" void SDLCALL callback(void* userdata, Uint8* stream, int len) {
 	int nread = queue.read(stream, len);
 	if (nread)
 		silence = stream[nread-1];
-	if (nread < len)
+	if (nread < len) {
+		//SDL_Log("audio queue underflow");
 		memset(stream+nread, silence, len-nread);
+	}
 }
 bool sync_to_audio = true;
+bool need_frame() {
+	return !sync_to_audio || queue.write_left > 48000/60;
+}
 void flip() {
 	SDL_LockAudioDevice(devid);
 	queue.flip();
 	SDL_UnlockAudioDevice(devid);
 }
 void enqueue(int16_t sample) {
+	//if (!queue.write_left) SDL_Log("audio queue overflow");
 	queue.write((uint8_t*)&sample, sizeof(sample));
-	if (!queue.write_left && sync_to_audio)
+	if ((queue.write_pending >= 48000/60 || !queue.write_left) && sync_to_audio)
 		cpu::exit_requested = true;
 }
 bool init() {
