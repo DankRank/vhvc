@@ -206,7 +206,7 @@ struct VRC3 : BasicMapper {
 	uint16_t counter = 0;
 	void irq_tick() {
 		if (!bus_inspect && enabled) {
-			if (mode ? counter&0xFF == 0xFF : counter == 0xFFFF) {
+			if (mode ? (counter&0xFF) == 0xFF : counter == 0xFFFF) {
 				irq_raise(IRQ_MAPPER);
 				if (mode)
 					counter = counter&0xFF00 | latch&0x00FF;

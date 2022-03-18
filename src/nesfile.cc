@@ -108,7 +108,7 @@ bool apply_patch(std::vector<uint8_t>& buf, cspan_u8 pbuf) {
 		if (len == 0) {
 			if (p + 3 >= end)
 				return false;
-			len = p[0]<<8 + p[1];
+			len = p[0]<<8 | p[1];
 			if (offset + len > buf.size())
 				buf.resize(offset + len);
 			memset(buf.data() + offset, p[3], len);
