@@ -175,7 +175,7 @@ void gui() {
 		if (ImGui::Begin("CPU State", &show_cpu_state)) {
 			ImGui::Text("A:%02X X:%02X Y:%02X S:%02X P:%02X PC:%04X", cpu::a, cpu::x, cpu::y, cpu::s, cpu::get_flags(), cpu::pc);
 			if (cpu::jammed)
-				ImGui::Text("[JAMMED]", cpu::jammed);
+				ImGui::Text("[JAMMED]");
 		}
 		ImGui::End();
 	}

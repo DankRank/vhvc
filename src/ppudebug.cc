@@ -50,8 +50,8 @@ void draw_obj_over_nt(void *pixels, int pitch) {
 				if (flipy)
 					ny ^= 0x07;
 			}
-			uint8_t bits0 = ppu_read(tile*16 + ny);
-			uint8_t bits1 = ppu_read(tile*16 + ny + 8);
+			uint8_t bits0 = ppu_read(ntile*16 + ny);
+			uint8_t bits1 = ppu_read(ntile*16 + ny + 8);
 			for (int x = 0; x < 8; x++) {
 				int nx = flipx ? x : 7-x;
 				if ((bits0 | bits1)>>nx & 1)
@@ -110,9 +110,13 @@ void draw_palette(SDL_Texture* tex) {
 	SDL_UnlockTexture(tex);
 }
 void on_reg_read(int reg, uint8_t data) {
+	(void)reg;
+	(void)data;
 	//fprintf(stderr, "PPU READ  %d %02X\n", reg, data);
 }
 void on_reg_write(int reg, uint8_t data) {
+	(void)reg;
+	(void)data;
 	//if (reg == 5)
 	//	fprintf(stderr, "PPU WRITE  %d %02X\n", reg, data);
 }
@@ -209,7 +213,7 @@ void gui() {
 			ImGui::Text("Object: %s | Background: %s",
 				ppu::obj_enable ? (ppu::obj_left ? "Enabled" : "Clipped") : "Disabled",
 				ppu::bg_enable ? (ppu::bg_left ? "Enabled" : "Clipped") : "Disabled");
-			ImGui::Text("Flags:%s%s%s",
+			ImGui::Text("Flags:%s%s%s%s%s%s",
 				ppu::vertical_increment ? " +vinc" : "",
 				ppu::nmi_enabled ? " +nmi" : "",
 				ppu::grayscale ? " +grayscale" : "",

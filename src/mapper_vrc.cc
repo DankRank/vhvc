@@ -88,19 +88,19 @@ struct VRC2 : BasicMapper {
 		bool isVRC2c;
 	};
 	static constexpr VRC2Variant variants[] = {
-	/*           VRC4   swap sh1 sh2 VRC2a */
-	/* VRC2a */ {false, true,  0, 0, true}, // A1 A0
-	/* VRC2b */ {false, false, 0}, // A0 A1
-	/* VRC2c */ {false, true,  0, 0, false, true}, // A1 A0
-	/* VRC4a */ {true,  false, 1}, // A1 A2
-	/* VRC4b */ {true,  true,  0}, // A1 A0
-	/* VRC4c */ {true,  false, 6}, // A6 A7
-	/* VRC4d */ {true,  true,  2}, // A3 A2
-	/* VRC4e */ {true,  false, 2}, // A2 A3
-	/* VRC4f */ {true,  false, 0}, // A0 A1
-	/* Map21 */ {true,  false, 1, 6}, // A1 A2 | A6 A7
-	/* Map23 */ {true,  false, 0, 2}, // A0 A1 | A2 A3
-	/* Map25 */ {true,  true,  0, 2}, // A1 A0 | A3 A2
+	/*           VRC4   swap sh1 sh2 VRC2a  VRC2c */
+	/* VRC2a */ {false, true,  0, 0, true,  false}, // A1 A0
+	/* VRC2b */ {false, false, 0, 0, false, false}, // A0 A1
+	/* VRC2c */ {false, true,  0, 0, false, true }, // A1 A0
+	/* VRC4a */ {true,  false, 1, 0, false, false}, // A1 A2
+	/* VRC4b */ {true,  true,  0, 0, false, false}, // A1 A0
+	/* VRC4c */ {true,  false, 6, 0, false, false}, // A6 A7
+	/* VRC4d */ {true,  true,  2, 0, false, false}, // A3 A2
+	/* VRC4e */ {true,  false, 2, 0, false, false}, // A2 A3
+	/* VRC4f */ {true,  false, 0, 0, false, false}, // A0 A1
+	/* Map21 */ {true,  false, 1, 6, false, false}, // A1 A2 | A6 A7
+	/* Map23 */ {true,  false, 0, 2, false, false}, // A0 A1 | A2 A3
+	/* Map25 */ {true,  true,  0, 2, false, false}, // A1 A0 | A3 A2
 	};
 	VRC2Variant v;
 	bool swap_mode = false;

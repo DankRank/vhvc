@@ -5,11 +5,12 @@ namespace vhvc {
 
 void Mapper::poweron() {}
 void Mapper::reset() {}
-uint8_t Mapper::cpu_read(uint16_t addr) { return cpu::data_bus; }
-void Mapper::cpu_write(uint16_t addr, uint8_t data) { }
+uint8_t Mapper::cpu_read(uint16_t addr) { (void)addr; return cpu::data_bus; }
+void Mapper::cpu_write(uint16_t addr, uint8_t data) { (void)addr; (void)data; }
 uint8_t Mapper::ppu_read(uint16_t addr) { return addr & 0xFF; }
-void Mapper::ppu_write(uint16_t addr, uint8_t data) {}
+void Mapper::ppu_write(uint16_t addr, uint8_t data) { (void)addr; (void)data; }
 void Mapper::debug_gui() {}
+Mapper::~Mapper() {}
 Mapper noop_mapper;
 Mapper* mapper = &noop_mapper;
 
@@ -88,15 +89,15 @@ bool in_range(cspan_u8 span, void* ptr) {
 	const char *BasicMapper::describe_pointer(uint8_t *ptr) {
 		static char buf[512];
 		if (in_range(nf->prgrom, ptr))
-			sprintf(buf, "PRGROM:%llX", ptr - nf->prgrom.data());
+			sprintf(buf, "PRGROM:%llX", (long long)(ptr - nf->prgrom.data()));
 		else if (in_range(nf->chrrom, ptr))
-			sprintf(buf, "CHRROM:%llX", ptr - nf->chrrom.data());
+			sprintf(buf, "CHRROM:%llX", (long long)(ptr - nf->chrrom.data()));
 		else if (in_range(span_u8(ppu_ram, sizeof(ppu_ram)), ptr))
-			sprintf(buf, "CIRAM:%llX", ptr - ppu_ram);
+			sprintf(buf, "CIRAM:%llX", (long long)(ptr - ppu_ram));
 		else if (in_range(nf->chrram, ptr))
-			sprintf(buf, "CHRRAM:%llX", ptr - nf->chrram.data());
+			sprintf(buf, "CHRRAM:%llX", (long long)(ptr - nf->chrram.data()));
 		else if (in_range(span_u8(chrram, sizeof(chrram)), ptr))
-			sprintf(buf, "CHRRAM:%llX", ptr - chrram);
+			sprintf(buf, "CHRRAM:%llX", (long long)(ptr - chrram));
 		else if (!ptr)
 			sprintf(buf, "NULL");
 		else

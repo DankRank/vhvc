@@ -80,6 +80,7 @@ void handle_input(SDL_Event* ev) {
 		case SDL_SCANCODE_DOWN: button = 0x20; break;
 		case SDL_SCANCODE_LEFT: button = 0x40; break;
 		case SDL_SCANCODE_RIGHT: button = 0x80; break;
+		default: break;
 		}
 		if (button) {
 			if (ev->type == SDL_KEYDOWN)

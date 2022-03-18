@@ -64,6 +64,7 @@ audio_queue<48000/60*2*3> queue;
 SDL_AudioDeviceID devid;
 uint8_t silence = 0;
 extern "C" void SDLCALL callback(void* userdata, Uint8* stream, int len) {
+	(void)userdata;
 	int nread = queue.read(stream, len);
 	if (nread)
 		silence = stream[nread-1];

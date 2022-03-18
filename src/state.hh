@@ -41,7 +41,8 @@ namespace vhvc {
 			SDL_Log(data ? "true" : "false");
 		}
 		void use(uint8_t* data, size_t n) {
-			SDL_Log("<array of %d>", n);
+			(void)data;
+			SDL_Log("<array of %zu>", n);
 		}
 	};
 }
