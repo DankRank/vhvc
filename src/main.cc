@@ -47,6 +47,12 @@ void events_basic() {
 			LogState st;
 			cpu::state(st);
 		}
+		if (ev.type == SDL_KEYDOWN &&
+				(ev.key.keysym.scancode == SDL_SCANCODE_P ||
+				ev.key.keysym.scancode == SDL_SCANCODE_PAUSE)) {
+			run_cpu = !run_cpu;
+			SDL_SetWindowTitle(window, run_cpu ? "vhvc" : "vhvc (paused)");
+		}
 		if (ev.type == SDL_QUIT) {
 			is_running = false;
 			break;
@@ -56,7 +62,7 @@ void events_basic() {
 	SDL_RenderClear(renderer);
 	SDL_RenderCopy(renderer, ppudebug::ppu_texture, NULL, NULL);
 	SDL_RenderPresent(renderer);
-	if (audio::need_frame())
+	if (run_cpu && audio::need_frame())
 		cpu::step(29580);
 	audio::flip();
 }
@@ -216,7 +222,7 @@ int main(int argc, char** argv)
 			return 0;
 		}
 		if (!strcmp(argv[i], "--basic"))
-			basic_mode = true;
+			run_cpu = basic_mode = true;
 		if (argv[i][0] != '-')
 			load_on_start = argv[i];
 	}
