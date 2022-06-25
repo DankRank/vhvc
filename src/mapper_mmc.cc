@@ -33,7 +33,7 @@ struct MMC1 : BasicMapper {
 		chrram_check();
 		if (reg_ctl & 0x10) {
 			set_chr4k(0, nf->get_chr4k(reg_chr0));
-			set_chr4k(0, nf->get_chr4k(reg_chr1));
+			set_chr4k(1, nf->get_chr4k(reg_chr1));
 		} else {
 			set_chr8k(nf->get_chr8k(reg_chr0/2));
 		}
