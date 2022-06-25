@@ -15,6 +15,7 @@ namespace vhvc::cpu {
 	extern bool nmi_line;
 	extern bool nmi;
 	extern unsigned irq;
+	extern bool resetting;
 	extern bool jammed;
 	extern bool C;
 	extern bool Z;

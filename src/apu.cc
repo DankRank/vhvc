@@ -267,7 +267,7 @@ struct DMC {
 			clock--;
 		}
 		if (enabled && !buffer_full && remaining) {
-			inspect_lock lk;
+			inspect_lock lk; // FIXME: actual DMA
 			buffer = cpu_read(cur_addr);
 			buffer_full = true;
 			cur_addr++;

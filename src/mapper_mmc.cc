@@ -176,17 +176,24 @@ struct MMC3 : BasicMapper {
 	bool ppu_a12_d1 = false;
 	bool ppu_a12_d2 = false;
 	bool ppu_a12_d3 = false;
+	uint8_t dbg_reg[8] = {0};
 	void poweron() {
-		set_prg16k(0, nf->get_prg16k(0));
+		set_prg8k(0, nf->get_prg16k(0));
+		set_prg8k(1, nf->get_prg16k(0));
 		set_prg16k(1, nf->get_prg16k(-1));
-		set_chr8k(nf->get_chr8k(0));
+		set_chr2k(0, nf->get_chr8k(0));
+		set_chr2k(1, nf->get_chr8k(0));
+		set_chr1k(4, nf->get_chr8k(0));
+		set_chr1k(5, nf->get_chr8k(0));
+		set_chr1k(6, nf->get_chr8k(0));
+		set_chr1k(7, nf->get_chr8k(0));
 		chrram_check();
 		set_mirroring(MIRRORING_VERTICAL);
 	}
 	void irq_tick() {
 		if (!ppu_a12_d3 && !ppu_a12_d2 && !ppu_a12_d1 && ppu_a12) {
 			if (irq_reload || irq_counter == 0) {
-				if (!irq_reload)
+				if (!irq_reload && irq_enabled)
 					irq_raise(IRQ_MAPPER);
 				irq_counter = irq_latch;
 				irq_reload = false;
@@ -198,7 +205,8 @@ struct MMC3 : BasicMapper {
 	}
 	void cpu_write(uint16_t addr, uint8_t data) {
 		BasicMapper::cpu_write(addr, data);
-		irq_tick();
+		if (!bus_inspect)
+			irq_tick();
 		switch (addr & 0xE001) {
 		case 0x8000:
 			cur_reg = data & 7;
@@ -206,6 +214,7 @@ struct MMC3 : BasicMapper {
 			chr_swap = data & 0x80;
 			break;
 		case 0x8001:
+			dbg_reg[cur_reg] = data;
 			switch (cur_reg) {
 			case 0: set_chr2k(0, nf->get_chr1k(data&0xFE)); break;
 			case 1: set_chr2k(1, nf->get_chr1k(data&0xFE)); break;
@@ -230,7 +239,8 @@ struct MMC3 : BasicMapper {
 		}
 	}
 	uint8_t cpu_read(uint16_t addr) {
-		irq_tick();
+		if (!bus_inspect)
+			irq_tick();
 		if (prg_swap && (addr & 0xA000) == 0x8000)
 			addr ^= 0x4000;
 		return BasicMapper::cpu_read(addr);
@@ -251,6 +261,12 @@ struct MMC3 : BasicMapper {
 	}
 	void debug_gui() {
 		BasicMapper::debug_gui();
+		ImGui::Text("cur_reg %d", cur_reg);
+		ImGui::Text("prg_swap %c, chr_swap %c",
+			prg_swap ? '+' : '-',
+			chr_swap ? '+' : '-');
+		ImGui::Text("R0 %02X, R1 %02X, R2 %02X, R3 %02X", dbg_reg[0], dbg_reg[1], dbg_reg[2], dbg_reg[3]);
+		ImGui::Text("R4 %02X, R5 %02X, R6 %02X, R7 %02X", dbg_reg[4], dbg_reg[5], dbg_reg[6], dbg_reg[7]);
 		ImGui::Text("ppu_a12 %c%c%c%c",
 			ppu_a12_d3 ? '+' : '-',
 			ppu_a12_d2 ? '+' : '-',

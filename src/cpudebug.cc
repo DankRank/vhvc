@@ -148,6 +148,7 @@ static const char* disassemble(uint16_t pc) {
 static int cycles = 0;
 bool is_debugging = false;
 bool nestest = false;
+bool log_intr = false;
 void on_insn() {
 	if (nestest) {
 		printf("%-47s A:%02X X:%02X Y:%02X P:%02X SP:%02X PPU:%3d,%3d CYC:%d\n",
@@ -166,6 +167,18 @@ void on_insn() {
 void on_cycle() {
 	if (nestest)
 		cycles++;
+}
+void on_intr() {
+	if (log_intr) {
+		printf("INTR:%s%s%s%s%s%s%s\n",
+			cpu::irq ? " IRQ (" : "",
+			cpu::irq & IRQ_FRAMECOUNTER ? " FrameCounter" : "",
+			cpu::irq & IRQ_DMC ? " DMC" : "",
+			cpu::irq & IRQ_MAPPER ? " Mapper" : "",
+			cpu::irq ? " )" : "",
+			cpu::nmi ? " NMI" : "",
+			cpu::resetting ? " RESET" : "");
+	}
 }
 
 bool show_cpu_state = false;

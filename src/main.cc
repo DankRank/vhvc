@@ -164,6 +164,8 @@ void events() {
 				set_sync_type(SYNC_TO_AUDIO);
 			if (ImGui::MenuItem("Don't Sync", nullptr, sync_type == SYNC_TO_NOTHING))
 				set_sync_type(SYNC_TO_NOTHING);
+			if (ImGui::MenuItem("Trace", nullptr, &cpudebug::nestest))
+				cpudebug::is_debugging = cpudebug::log_intr = cpudebug::nestest;
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("PPU")) {

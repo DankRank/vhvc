@@ -81,6 +81,8 @@ jam:
 			cpudebug::on_insn();
 		uint8_t ir, b1;
 		if (interrupt_pending && (irq || nmi) || resetting) {
+			if (cpudebug::is_debugging)
+				cpudebug::on_intr();
 			READ(pc);
 			ir = 0;
 			b1 = READ(pc);
