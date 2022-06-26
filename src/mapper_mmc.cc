@@ -195,14 +195,18 @@ struct MMC3 : BasicMapper {
 		if (!ppu_a12_d3 && !ppu_a12_d2 && !ppu_a12_d1 && ppu_a12) {
 			if (ppudebug::show_events)
 				ppudebug::put_event(0x00FFFF);
+			// MMC3A: whenever counter is 0 after decrement from 1 or reload
+			//if ((irq_reload && irq_latch == 0 || irq_counter == 1) && irq_enabled)
+			//	irq_raise(IRQ_MAPPER);
 			if (irq_reload || irq_counter == 0) {
-				if (!irq_reload && irq_enabled)
-					irq_raise(IRQ_MAPPER);
 				irq_counter = irq_latch;
 				irq_reload = false;
 			} else {
 				irq_counter--;
 			}
+			// MMC3C: whenever counter is 0
+			if (irq_counter == 0 && irq_enabled)
+				irq_raise(IRQ_MAPPER);
 		}
 		ppu_a12_d3 = ppu_a12_d2; ppu_a12_d2 = ppu_a12_d1; ppu_a12_d1 = ppu_a12; ppu_a12 = false;
 	}
@@ -236,7 +240,7 @@ struct MMC3 : BasicMapper {
 			// FIXME:
 			break;
 		case 0xC000: irq_latch = data; break;
-		case 0xC001: irq_reload = true; break;
+		case 0xC001: irq_counter = 0; irq_reload = true; break;
 		case 0xE000: irq_enabled = false; irq_ack(IRQ_MAPPER); break;
 		case 0xE001: irq_enabled = true; break;
 		}
