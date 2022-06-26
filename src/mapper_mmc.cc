@@ -1,6 +1,7 @@
 #include "mapper.hh"
 #include "bus.hh"
 #include "ppu.hh"
+#include "ppudebug.hh"
 #include "imgui.h"
 namespace vhvc {
 struct MMC1 : BasicMapper {
@@ -192,6 +193,8 @@ struct MMC3 : BasicMapper {
 	}
 	void irq_tick() {
 		if (!ppu_a12_d3 && !ppu_a12_d2 && !ppu_a12_d1 && ppu_a12) {
+			if (ppudebug::show_events)
+				ppudebug::put_event(0x00FFFF);
 			if (irq_reload || irq_counter == 0) {
 				if (!irq_reload && irq_enabled)
 					irq_raise(IRQ_MAPPER);

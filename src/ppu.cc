@@ -380,6 +380,10 @@ static void update_flags() {
 	if (line == 241 && dot == 1) {
 		in_vblank = true;
 		cpu::set_nmi(nmi_enabled);
+		if (ppudebug::show_events) {
+			ppudebug::swap_event();
+			ppudebug::put_event(0xFFFF00);
+		}
 		if (ppudebug::sync_to_vblank || ppudebug::break_on_vblank)
 			cpu::exit_requested = true;
 		if (ppudebug::break_on_vblank)

@@ -173,6 +173,7 @@ void events() {
 			ImGui::MenuItem("Pattern Tables", nullptr, &ppudebug::show_pt_window);
 			ImGui::MenuItem("Nametables", nullptr, &ppudebug::show_nt_window);
 			ImGui::MenuItem("Palette", nullptr, &ppudebug::show_pal_window);
+			ImGui::MenuItem("Events", nullptr, &ppudebug::show_events);
 			ImGui::MenuItem("PPU Output", nullptr, &ppudebug::show_ppu_output);
 			ImGui::MenuItem("Break on Scanline", nullptr, &ppudebug::break_on_scanline);
 			ImGui::MenuItem("Break on VBlank", nullptr, &ppudebug::break_on_vblank);

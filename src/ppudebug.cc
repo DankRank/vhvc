@@ -1,5 +1,6 @@
 #include "ppudebug.hh"
 #include <stdio.h>
+#include <utility>
 #include "imgui.h"
 #include "bus.hh"
 #include "ppu.hh"
@@ -124,9 +125,12 @@ SDL_Texture* pt_texture = NULL;
 SDL_Texture* nt_texture = NULL;
 SDL_Texture* pal_texture = NULL;
 SDL_Texture* ppu_texture = NULL;
+SDL_Texture* events_texture1 = NULL;
+SDL_Texture* events_texture2 = NULL;
 bool show_pt_window = false;
-bool show_nt_window = true;
+bool show_nt_window = false;
 bool show_pal_window = false;
+bool show_events = true;
 bool show_ppu_output = true;
 bool show_ppu_state = false;
 bool sync_to_vblank = false;
@@ -148,6 +152,16 @@ bool init(SDL_Renderer *renderer) {
 		fprintf(stderr, "SDL_CreateTexture: %s\n", SDL_GetError());
 		return false;
 	}
+	events_texture1 = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, 340, 261);
+	if (!events_texture1) {
+		fprintf(stderr, "SDL_CreateTexture: %s\n", SDL_GetError());
+		return false;
+	}
+	events_texture2 = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, 340, 261);
+	if (!events_texture2) {
+		fprintf(stderr, "SDL_CreateTexture: %s\n", SDL_GetError());
+		return false;
+	}
 	ppu_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, 256, 240);
 	if (!ppu_texture) {
 		fprintf(stderr, "SDL_CreateTexture: %s\n", SDL_GetError());
@@ -164,6 +178,21 @@ void draw_ppu_texture() {
 		memcpy(pp, &ppu::framebuffer[256*y], 256*sizeof(uint32_t));
 	}
 	SDL_UnlockTexture(ppu_texture);
+}
+void put_event(uint32_t color) {
+	void* pixels;
+	int pitch;
+	SDL_LockTexture(events_texture2, NULL, &pixels, &pitch);
+	add_lines(pixels, pitch, ppu::line)[ppu::dot] = color;
+	SDL_UnlockTexture(events_texture2);
+}
+void swap_event() {
+	std::swap(events_texture1, events_texture2);
+	void* pixels;
+	int pitch;
+	SDL_LockTexture(events_texture2, NULL, &pixels, &pitch);
+	memset(pixels, 0, pitch*261);
+	SDL_UnlockTexture(events_texture2);
 }
 void gui() {
 	if (show_pt_window) {
@@ -192,6 +221,12 @@ void gui() {
 			}
 			draw_palette(pal_texture);
 			ImGui::Image(pal_texture, ImVec2{ 16 * 32, 2 * 32 });
+		}
+		ImGui::End();
+	}
+	if (show_events) {
+		if (ImGui::Begin("Events", &show_events)) {
+			ImGui::Image(events_texture1, ImVec2{ 340 * 2, 261 * 2 });
 		}
 		ImGui::End();
 	}

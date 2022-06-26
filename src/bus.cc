@@ -1,5 +1,6 @@
 #include "bus.hh"
 #include "cpudebug.hh"
+#include "ppudebug.hh"
 #include "input.hh"
 #include "ppu.hh"
 #include "mapper.hh"
@@ -7,6 +8,16 @@
 namespace vhvc {
 bool bus_inspect = false;
 void irq_raise(unsigned source) {
+	if (ppudebug::show_events) {
+		switch (source) {
+			case IRQ_MAPPER:
+				ppudebug::put_event(0xFF0000); break;
+			case IRQ_DMC:
+				ppudebug::put_event(0xCC8888); break;
+			case IRQ_FRAMECOUNTER:
+				ppudebug::put_event(0x882222); break;
+		}
+	}
 	cpu::irq |= source;
 }
 void irq_ack(unsigned source) {
