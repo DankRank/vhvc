@@ -136,6 +136,8 @@ bool show_ppu_state = false;
 bool sync_to_vblank = false;
 bool break_on_scanline = false;
 bool break_on_vblank = false;
+static void *event_pixels = NULL;
+static int event_pitch = 0;
 bool init(SDL_Renderer *renderer) {
 	pt_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, 128, 256);
 	if (!pt_texture) {
@@ -167,6 +169,7 @@ bool init(SDL_Renderer *renderer) {
 		fprintf(stderr, "SDL_CreateTexture: %s\n", SDL_GetError());
 		return false;
 	}
+	SDL_LockTexture(events_texture2, NULL, &event_pixels, &event_pitch);
 	return true;
 }
 void draw_ppu_texture() {
@@ -180,19 +183,13 @@ void draw_ppu_texture() {
 	SDL_UnlockTexture(ppu_texture);
 }
 void put_event(uint32_t color) {
-	void* pixels;
-	int pitch;
-	SDL_LockTexture(events_texture2, NULL, &pixels, &pitch);
-	add_lines(pixels, pitch, ppu::line)[ppu::dot] = color;
-	SDL_UnlockTexture(events_texture2);
+	add_lines(event_pixels, event_pitch, ppu::line)[ppu::dot] = color;
 }
 void swap_event() {
-	std::swap(events_texture1, events_texture2);
-	void* pixels;
-	int pitch;
-	SDL_LockTexture(events_texture2, NULL, &pixels, &pitch);
-	memset(pixels, 0, pitch*261);
 	SDL_UnlockTexture(events_texture2);
+	std::swap(events_texture1, events_texture2);
+	SDL_LockTexture(events_texture2, NULL, &event_pixels, &event_pitch);
+	memset(event_pixels, 0, event_pitch*261);
 }
 void gui() {
 	if (show_pt_window) {
