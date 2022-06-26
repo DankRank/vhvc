@@ -214,6 +214,8 @@ struct MMC3 : BasicMapper {
 		BasicMapper::cpu_write(addr, data);
 		if (!bus_inspect)
 			irq_tick();
+		if (addr & 0x8000 && ppudebug::show_events)
+			ppudebug::put_event(0xFF00FF);
 		switch (addr & 0xE001) {
 		case 0x8000:
 			cur_reg = data & 7;

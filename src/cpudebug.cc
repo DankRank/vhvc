@@ -1,5 +1,6 @@
 #include "cpudebug.hh"
 #include <stdio.h>
+#include "ppu.hh"
 #include "bus.hh"
 #include "imgui.h"
 namespace vhvc::cpudebug {
@@ -170,7 +171,8 @@ void on_cycle() {
 }
 void on_intr() {
 	if (log_intr) {
-		printf("INTR:%s%s%s%s%s%s%s\n",
+		printf("INTR: %3d,%3d %s%s%s%s%s%s%s\n",
+			ppu::line, ppu::dot,
 			cpu::irq ? " IRQ (" : "",
 			cpu::irq & IRQ_FRAMECOUNTER ? " FrameCounter" : "",
 			cpu::irq & IRQ_DMC ? " DMC" : "",
