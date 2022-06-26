@@ -391,8 +391,12 @@ jam:
 			CIRQ();
 			b2 = READ(vector + 1);
 			pc = b2 << 8 | b1;
-			if (resetting || nmi || irq)
+			if (resetting || nmi || irq) {
 				I = true;
+				// Here we must check immediately after setting I to avoid double IRQ
+				// FIXME: perhaps this is a sign that the I flag should be updated earlier?
+				CIRQ();
+			}
 			if (resetting)
 				resetting = false;
 			if (nmi)
