@@ -190,6 +190,17 @@ struct Triangle {
 		}
 	}
 	int output() {
+		/* Megaman 1 and 2 set timer to 0 to silence triangle channel.
+		 * If we don't filter out ultrasonic frequencies, we get hiss from aliasing.
+		 * This can be considered a substitute for a low-pass filter.
+		 * The formula for triangle period length is apu_period/2 * 32 * (t+1)
+		 * | timer | NTSC     |
+		 * | t = 0 | 55930 Hz |
+		 * | t = 1 | 27965 Hz |
+		 * | t = 2 | 18643 Hz |
+		 */
+		if (timer < 2 && lc.counter && linear_clock)
+			return 8; // actually 7.5
 		return sequence_no < 16 ? 15 - sequence_no : sequence_no - 16;
 	}
 };
