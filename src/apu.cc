@@ -4,6 +4,8 @@
 #include <array>
 #include <algorithm>
 namespace vhvc::apu {
+File dump_file;
+
 // NTSC APU clock: 315/88*1000000*6/12/2 Hz = 9843750/11 Hz = 11/9843750 s = 704/630000000 s
 // Desired sample rate: 48000 Hz = 1/48000 s = 13125/630000000 s
 static constexpr int apu_period = 704;
@@ -355,6 +357,16 @@ void do_cycle() {
 		sampling_clock += apu_period;
 		if (sampling_clock > sampling_period) {
 			sampling_clock -= sampling_period;
+			if (dump_file) {
+				int16_t buf[5] = {
+					mix(pulse1.output(), 0, 0, 0, 0),
+					mix(0, pulse2.output(), 0, 0, 0),
+					mix(0, 0, triangle.output(), 0, 0),
+					mix(0, 0, 0, noise.output(), 0),
+					mix(0, 0, 0, 0, dmc.output()),
+				};
+				dump_file.write(buf, 2, 5);
+			}
 			audio::enqueue(mix(pulse1.output(), pulse2.output(), triangle.output(), noise.output(), dmc.output()));
 		}
 	}

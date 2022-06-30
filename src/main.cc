@@ -8,6 +8,7 @@
 #include "mapper.hh"
 #include "palette.hh"
 #include "audio.hh"
+#include "apu.hh"
 #include "state.hh"
 
 #include "imgui.h"
@@ -186,6 +187,8 @@ void events() {
 		if (ImGui::BeginMenu("Tools")) {
 			ImGui::MenuItem("Joy debug", nullptr, &show_input_debug);
 			ImGui::MenuItem("Mapper Debug", nullptr, &show_mapper_debug);
+			if (ImGui::MenuItem("Dump Audio", nullptr, !!apu::dump_file))
+				apu::dump_file = apu::dump_file ? File() : File::fromFile("apudump.bin", "wb");
 			ImGui::MenuItem("ImGui demo", nullptr, &show_demo_window);
 			ImGui::EndMenu();
 		}
