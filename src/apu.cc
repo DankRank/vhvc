@@ -10,6 +10,10 @@ File dump_file;
 // Desired sample rate: 48000 Hz = 1/48000 s = 13125/630000000 s
 static constexpr int apu_period = 704;
 static constexpr int sampling_period = 13125;
+// PAL APU clock: 443361875/100*6/16/2 Hz = 53203425/64 Hz = 64/53203425 s = 40960/34050192000 s
+// Desired sample rate: 48000 Hz = 1/48000 s = 709379/34050192000 s
+//static constexpr int apu_period = 40960;
+//static constexpr int sampling_period = 709379;
 int sampling_clock = 0;
 
 bool quarter_clock = false;
@@ -194,10 +198,10 @@ struct Triangle {
 		 * If we don't filter out ultrasonic frequencies, we get hiss from aliasing.
 		 * This can be considered a substitute for a low-pass filter.
 		 * The formula for triangle period length is apu_period/2 * 32 * (t+1)
-		 * | timer | NTSC     |
-		 * | t = 0 | 55930 Hz |
-		 * | t = 1 | 27965 Hz |
-		 * | t = 2 | 18643 Hz |
+		 * | timer | NTSC     | PAL      |
+		 * | t = 0 | 55930 Hz | 51956 Hz |
+		 * | t = 1 | 27965 Hz | 25978 Hz |
+		 * | t = 2 | 18643 Hz | 17319 Hz |
 		 */
 		if (timer < 2 && lc.counter && linear_clock)
 			return 8; // actually 7.5
@@ -306,32 +310,54 @@ bool five_step = false;
 bool interrupt_inhibit = true;
 int frame_counter = 0;
 int delay_4017 = 0;
+enum {
+	STEP_1,
+	STEP_2,
+	STEP_3,
+	STEP_4_PRE,
+	STEP_4,
+	STEP_4_POST,
+	STEP_5
+};
+template<bool NTSC>
+static constexpr always_inline int counter_to_index(int ctr) {
+	switch (ctr) {
+		case (NTSC?3728:4156)*2 + 1:   return STEP_1;
+		case (NTSC?7456:8313)*2 + 1:   return STEP_2;
+		case (NTSC?11185:12469)*2 + 1: return STEP_3;
+		case (NTSC?14914:16626)*2:     return STEP_4_PRE;
+		case (NTSC?14914:16626)*2 + 1: return STEP_4;
+		case (NTSC?14915:16627)*2:     return STEP_4_POST;
+		case (NTSC?18640:20782)*2 + 1: return STEP_5;
+		default: return -1;
+	}
+}
 void do_cycle() {
 	// FIXME: ugly
 
-	switch (frame_counter) {
-	case 3728*2 + 1: quarter_clock = true; break;
-	case 7456*2 + 1: quarter_clock = true; half_clock = true; break;
-	case 11185*2 + 1: quarter_clock = true; break;
-	case 14914*2:
+	switch (counter_to_index<true>(frame_counter)) {
+	case STEP_1: quarter_clock = true; break;
+	case STEP_2: quarter_clock = true; half_clock = true; break;
+	case STEP_3: quarter_clock = true; break;
+	case STEP_4_PRE:
 		if (!five_step && !interrupt_inhibit)
 			irq_raise(IRQ_FRAMECOUNTER);
 		break;
-	case 14914*2 + 1:
+	case STEP_4:
 		if (!five_step) {
 			quarter_clock = true; half_clock = true;
 			if (!interrupt_inhibit)
 				irq_raise(IRQ_FRAMECOUNTER);
 		}
 		break;
-	case 14915*2:
+	case STEP_4_POST:
 		if (!five_step) {
 			if (!interrupt_inhibit)
 				irq_raise(IRQ_FRAMECOUNTER);
 			frame_counter = 0;
 		}
 		break;
-	case 18640*2 + 1:
+	case STEP_5:
 		quarter_clock = true; half_clock = true;
 		frame_counter = 0;
 		break;
