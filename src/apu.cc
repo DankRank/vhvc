@@ -126,8 +126,7 @@ struct Pulse {
 		if (sweep_negate)
 			delta = ~delta + (int)sweep_ch2;
 		int next = timer + delta;
-		// TODO: figure out how muting works under negation
-		sweep_mute = next&0x800 || timer < 8;
+		sweep_mute = next>0x7FF || timer < 8;
 		sweep_next = next&0x7FF;
 	}
 	void sweep_tick() {
