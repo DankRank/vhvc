@@ -47,6 +47,19 @@ bool load_file(std::vector<uint8_t>& buf)
 		return load_nsf(buf);
 	return false;
 }
+
+void events_headless() {
+	SDL_Event ev;
+	while (SDL_PollEvent(&ev)) {
+		if (ev.type == SDL_QUIT) {
+			is_running = false;
+			break;
+		}
+	}
+	if (audio::need_frame())
+		cpu::step(29580);
+	audio::flip();
+}
 void events_basic() {
 	SDL_Event ev;
 	while (SDL_PollEvent(&ev)) {
@@ -221,6 +234,7 @@ int main(int argc, char** argv)
 
 	const char *load_on_start = "donkey_kong.nes";
 	bool basic_mode = false;
+	bool headless_mode = false;
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "--nestest")) {
 			File f = File::fromFile("nestest.nes", "rb");
@@ -238,6 +252,8 @@ int main(int argc, char** argv)
 			}
 			return 0;
 		}
+		if (!strcmp(argv[i], "--headless"))
+			run_cpu = basic_mode = headless_mode = true;
 		if (!strcmp(argv[i], "--basic"))
 			run_cpu = basic_mode = true;
 		if (argv[i][0] != '-')
@@ -259,25 +275,27 @@ int main(int argc, char** argv)
 		fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
 		return 1;
 	}
-	int w = basic_mode ? 512 : 1280;
-	int h = basic_mode ? 480 : 960;
-	window = SDL_CreateWindow("vhvc", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h,
-		SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-	if (!window) {
-		fprintf(stderr, "SDL_CreateWindow: %s\n", SDL_GetError());
-		return 1;
-	}
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-	if (!renderer) {
-		fprintf(stderr, "SDL_CreateRenderer: %s\n", SDL_GetError());
-		return 1;
+	if (!headless_mode) {
+		int w = basic_mode ? 512 : 1280;
+		int h = basic_mode ? 480 : 960;
+		window = SDL_CreateWindow("vhvc", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h,
+			SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+		if (!window) {
+			fprintf(stderr, "SDL_CreateWindow: %s\n", SDL_GetError());
+			return 1;
+		}
+		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+		if (!renderer) {
+			fprintf(stderr, "SDL_CreateRenderer: %s\n", SDL_GetError());
+			return 1;
+		}
 	}
 	set_sync_type(SYNC_TO_AUDIO);
 
 	if (!audio::init())
 		return 1;
 
-	if (!ppudebug::init(renderer)) {
+	if (!headless_mode && !ppudebug::init(renderer)) {
 		return 1;
 	}
 
@@ -290,7 +308,12 @@ int main(int argc, char** argv)
 	}
 
 	while (is_running) {
-		basic_mode ? events_basic() : events();
+		if (headless_mode)
+			events_headless();
+		else if (basic_mode)
+			events_basic();
+		else
+			events();
 	}
 
 	if (!basic_mode) {
@@ -299,8 +322,10 @@ int main(int argc, char** argv)
 		ImGui::DestroyContext();
 	}
 
-	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow(window);
+	if (!headless_mode) {
+		SDL_DestroyRenderer(renderer);
+		SDL_DestroyWindow(window);
+	}
 	SDL_Quit();
 	return 0;
 }
