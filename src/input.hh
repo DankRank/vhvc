@@ -8,6 +8,7 @@ namespace vhvc {
 	};
 	extern struct Joy joy1;
 	extern struct Joy joy2;
+	extern uint8_t nsf_console_input;
 	void handle_input(SDL_Event* ev);
 	void input_debug(bool* p_open);
 	uint8_t read_4016();

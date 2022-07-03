@@ -123,6 +123,7 @@ struct NsfMapper : Mapper {
 				uint8_t input = 0;
 				for (int i = 0; i < 8; i++)
 					input |= (read_4016()&1) << i;
+				input |= std::exchange(nsf_console_input, 0);
 				input &= ~std::exchange(last_input, input);
 				if (input & 0x40) {
 					if (current_song != 0) {

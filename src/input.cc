@@ -5,6 +5,7 @@ namespace vhvc {
 struct Joy joy1 = {};
 struct Joy joy2 = {};
 static uint8_t kbd_state = 0;
+uint8_t nsf_console_input = 0;
 static Joy* find_joy(int id) {
 	if (joy1.joyid == id)
 		return &joy1;

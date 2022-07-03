@@ -47,10 +47,25 @@ bool load_file(std::vector<uint8_t>& buf)
 		return load_nsf(buf);
 	return false;
 }
-
+Uint32 event_console = 0;
+int console_thread(void*) {
+	SDL_Event ev;
+	memset(&ev, 0, sizeof(ev));
+	ev.type = event_console;
+	for (;;) {
+		switch (getchar()) {
+			case '<': ev.user.code = 0x40; SDL_PushEvent(&ev); break;
+			case '>': ev.user.code = 0x80; SDL_PushEvent(&ev); break;
+			case EOF: ev.user.code = 0; ev.type = SDL_QUIT; SDL_PushEvent(&ev); break;
+		}
+	}
+}
 void events_headless() {
 	SDL_Event ev;
 	while (SDL_PollEvent(&ev)) {
+		if (ev.type == event_console) {
+			nsf_console_input |= ev.user.code;
+		}
 		if (ev.type == SDL_QUIT) {
 			is_running = false;
 			break;
@@ -297,6 +312,16 @@ int main(int argc, char** argv)
 
 	if (!headless_mode && !ppudebug::init(renderer)) {
 		return 1;
+	}
+
+	if (headless_mode) {
+		event_console = SDL_RegisterEvents(1);
+		SDL_Thread *thread = SDL_CreateThread(console_thread, "Console Reader", nullptr);
+		if (!thread) {
+			fprintf(stderr, "SDL_CreateThread: %s\n", SDL_GetError());
+			return 1;
+		}
+		SDL_DetachThread(thread);
 	}
 
 	if (!basic_mode) {
