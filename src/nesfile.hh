@@ -59,7 +59,7 @@ namespace vhvc {
 		NesFile(NesFile&&) = default;
 		NesFile& operator=(NesFile&&) = default;
 	};
-	bool load_rom(std::vector<uint8_t>& buf);
+	bool load_nes(std::vector<uint8_t>& buf);
 	bool apply_patch(std::vector<uint8_t>& buf, cspan_u8 pbuf);
 	bool apply_patch(std::vector<uint8_t>& buf, File& patch);
 }

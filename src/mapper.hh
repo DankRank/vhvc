@@ -2,6 +2,7 @@
 #define VHVC_MAPPER
 #include "common.hh"
 #include "nesfile.hh"
+#include "nsffile.hh"
 #include "cpu.hh"
 namespace vhvc {
 	struct Mapper {
@@ -17,6 +18,7 @@ namespace vhvc {
 	extern Mapper* mapper;
 	void mapper_cleanup();
 	void mapper_setup(NesFile& nf);
+	void mapper_setup(NsfFile& nf);
 
 	struct BasicMapper : Mapper {
 		NesFile* nf = nullptr;

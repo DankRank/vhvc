@@ -5,6 +5,7 @@
 #include "ppudebug.hh"
 #include "bus.hh"
 #include "nesfile.hh"
+#include "nsffile.hh"
 #include "mapper.hh"
 #include "palette.hh"
 #include "audio.hh"
@@ -37,6 +38,14 @@ void set_sync_type(int type) {
 	SDL_RenderSetVSync(renderer, type == SYNC_TO_VSYNC);
 	ppudebug::sync_to_vblank = type != SYNC_TO_AUDIO;
 	audio::sync_to_audio = type == SYNC_TO_AUDIO;
+}
+bool load_file(std::vector<uint8_t>& buf)
+{
+	if (buf.size() > 0x16 && !memcmp(buf.data(), "NES\032", 4))
+		return load_nes(buf);
+	if (buf.size() > 0x80 && !memcmp(buf.data(), "NESM\032\001", 6))
+		return load_nsf(buf);
+	return false;
 }
 void events_basic() {
 	SDL_Event ev;
@@ -81,7 +90,7 @@ void events() {
 			if (f) {
 				std::vector<uint8_t> buf;
 				if (f.readInto(buf)) {
-					load_rom(buf);
+					load_file(buf);
 					bus_poweron();
 				}
 			}
@@ -112,7 +121,7 @@ void events() {
 				if (f) {
 					std::vector<uint8_t> buf;
 					if (f.readInto(buf)) {
-						load_rom(buf);
+						load_file(buf);
 						bus_poweron();
 					}
 				}
@@ -220,7 +229,7 @@ int main(int argc, char** argv)
 				if (f.readInto(buf)) {
 					static const uint8_t patch[] = "PATCH\x00\x40\x0C\x00\x02\x00\xC0""EOF";
 					apply_patch(buf, cspan_u8(patch));
-					load_rom(buf);
+					load_file(buf);
 					cpudebug::is_debugging = true;
 					cpudebug::nestest = true;
 					bus_poweron();
@@ -239,7 +248,7 @@ int main(int argc, char** argv)
 		if (f) {
 			std::vector<uint8_t> buf;
 			if (f.readInto(buf))
-				load_rom(buf);
+				load_file(buf);
 		}
 		bus_poweron();
 	}

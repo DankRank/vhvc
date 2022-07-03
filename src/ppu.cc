@@ -425,6 +425,8 @@ void do_cycle() {
 	advance_dot_clock();
 }
 uint8_t reg_read(int reg) {
+	if (bus_inspect)
+		return iobus;
 	switch (reg) {
 	case PPUSTATUS:
 		iobus = (int)in_vblank<<7 | (int)obj0_hit<<6 | (int)obj_overflow<<5 | iobus&0x1F;

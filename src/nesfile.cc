@@ -84,7 +84,7 @@ NesFile::NesFile(std::vector<uint8_t>&& a_buf) :buf(a_buf) {
 	}
 	is_valid = true;
 }
-bool load_rom(std::vector<uint8_t> &buf) {
+bool load_nes(std::vector<uint8_t> &buf) {
 	mapper_setup(*new NesFile(std::move(buf)));
 	return true;
 }

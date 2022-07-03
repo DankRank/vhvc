@@ -29,7 +29,7 @@ namespace vhvc {
 			return span<T>(m_data + m_size - count, count);
 		}
 		constexpr span<T> subspan(size_t offset, size_t count = -1) const {
-			return span<T>(m_data + offset, count == (size_t)-1 ? count - offset : count);
+			return span<T>(m_data + offset, count == (size_t)-1 ? m_size - offset : count);
 		}
 	};
 	template<typename T>
