@@ -56,7 +56,7 @@ int console_thread(void*) {
 		switch (getchar()) {
 			case '<': ev.user.code = 0x40; SDL_PushEvent(&ev); break;
 			case '>': ev.user.code = 0x80; SDL_PushEvent(&ev); break;
-			case EOF: ev.user.code = 0; ev.type = SDL_QUIT; SDL_PushEvent(&ev); break;
+			case EOF: ev.user.code = 0; ev.type = SDL_QUIT; SDL_PushEvent(&ev); return 0;
 		}
 	}
 }
