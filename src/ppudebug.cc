@@ -19,8 +19,9 @@ void draw_pt(SDL_Texture *tex) {
 		for (int y = 0; y < 8; y++) {
 			uint8_t bits0 = ppu_read(t*16 + y);
 			uint8_t bits1 = ppu_read(t*16 + y + 8);
+			static constexpr uint32_t grayscale[4] = { 0x000000, 0x555555, 0xCCCCCC, 0xFFFFFF };
 			for (int x = 0; x < 8; x++)
-				*pp++ = palette::colors[(bits0>>(7-x) & 1 | bits1>>(7-x)<<1 & 1)<<4];
+				*pp++ = grayscale[bits0>>(7-x) & 1 | bits1>>(7-x)<<1 & 2];
 			pp = add_lines(pp, pitch, 1) - 8;
 		}
 	}
