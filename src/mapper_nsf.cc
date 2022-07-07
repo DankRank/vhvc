@@ -28,7 +28,7 @@ struct NsfMapper : Mapper {
 				switch (addr) {
 					case 0xFFFA: return 0x07; // nmi low
 					case 0xFFFB: return 0x41; // nmi high
-					case 0xFFFC: return 0x10; // reset low
+					case 0xFFFC: return 0x12; // reset low
 					case 0xFFFD: return 0x41; // reset high
 					case 0xFFFE: return 0x06; // irq low
 					case 0xFFFF: return 0x41; // irq high
@@ -46,12 +46,14 @@ struct NsfMapper : Mapper {
 				// IRQ at 0x4106
 				0x40,             // RTI
 				// NMI at 0x4107
+				0x08,             // PHP
 				0x48,             // PHA
 				0xAD, 0x02, 0x20, // LDA $2002
 				0x8D, 0xFF, 0x41, // STA $41FF
 				0x68,             // PLA
+				0x28,             // PLP
 				0x40,             // RTI
-				// RESET at 0x4110
+				// RESET at 0x4112
 				// basic PPU initialization
 				0x78,             // SEI
 				0xD8,             // CLD
