@@ -26,7 +26,7 @@ static const char* insnames[256] = {
 	"BCC","STA","JAM","SHA","STY","STA","STX","SAX",
 	"TYA","STA","TXS","TAS","SHY","STA","SHX","SHA",
 	"LDY","LDA","LDX","LAX","LDY","LDA","LDX","LAX",
-	"TAY","LDA","TAX","LXA","LDY","LDA","LDX","LAX",
+	"TAY","LDA","TAX","LAX","LDY","LDA","LDX","LAX",
 	"BCS","LDA","JAM","LAX","LDY","LDA","LDX","LAX",
 	"CLV","LDA","TSX","LAS","LDY","LDA","LDX","LAX",
 	"CPY","CMP","NOP","DCP","CPY","CMP","DEC","DCP",
