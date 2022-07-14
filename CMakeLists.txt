@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.18)
 project(vhvc)
 find_package(SDL2 REQUIRED)
+add_library(imgui INTERFACE IMPORTED)
+target_include_directories(imgui INTERFACE extlib/imgui extlib/imgui/backends)
 add_executable(vhvc
 	src/common.hh
 	src/main.cc
@@ -27,8 +29,7 @@ add_executable(vhvc
 	src/audio.cc src/audio.hh
 	src/state.hh
 )
-target_include_directories(vhvc PRIVATE ${SDL2_INCLUDE_DIRS} extlib/imgui extlib/imgui/backends)
-target_link_libraries(vhvc PRIVATE ${SDL2_LIBRARIES})
+target_link_libraries(vhvc PRIVATE SDL2::SDL2 SDL2::SDL2main imgui)
 target_compile_features(vhvc PRIVATE cxx_std_17)
 if(MSVC)
 	target_compile_options(vhvc PRIVATE "/Zc:__cplusplus")

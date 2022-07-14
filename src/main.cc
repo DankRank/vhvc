@@ -356,6 +356,6 @@ int main(int argc, char** argv)
 }
 }
 
-int main(int argc, char** argv) {
+extern "C" int main(int argc, char** argv) {
 	return vhvc::main(argc, argv);
 }
