@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.11)
 project(vhvc)
 find_package(SDL2 REQUIRED)
 add_library(imgui INTERFACE IMPORTED)

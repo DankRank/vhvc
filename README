@@ -30,7 +30,7 @@ vhvc - A Famicom Emulator
 
 - Build Instructions -
 Requirements:
-	CMake 3.18+
+	CMake 3.11+
 	SDL 2.0.18+
 
 Instructions:
