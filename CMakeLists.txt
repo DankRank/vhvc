@@ -1,8 +1,10 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.8)
 project(vhvc)
 find_package(SDL2 REQUIRED)
 add_library(imgui INTERFACE IMPORTED)
-target_include_directories(imgui INTERFACE extlib/imgui extlib/imgui/backends)
+set_target_properties(imgui PROPERTIES
+	INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/extlib/imgui;${CMAKE_CURRENT_SOURCE_DIR}/extlib/imgui/backends"
+)
 add_executable(vhvc
 	src/common.hh
 	src/main.cc
