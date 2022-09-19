@@ -45,32 +45,32 @@ namespace vhvc {
 		struct extent_eq: std::enable_if<E == dynamic_extent || E == N, int> {};
 
 		// checks that It is contiguous iterator
+		template<class It, class = void>
+		struct is_citer_impl: std::false_type {};
 		template<class It>
-		auto is_citer_impl(int) -> decltype(std::addressof(*std::declval<It>()), std::true_type());
+		struct is_citer_impl<It, decltype(void(std::addressof(*std::declval<It>())))>: std::true_type {};
 		template<class It>
-		auto is_citer_impl(...) -> std::false_type;
-		template<class It>
-		struct is_citer: std::enable_if<decltype(is_citer_impl<It>(0))::value, int> {};
+		struct is_citer: std::enable_if<is_citer_impl<It>::value, int> {};
 
 		// checks that It is contiguous iterator and End is a corresponding end iterator
+		template<class It, class End, class = void>
+		struct is_citer_pair_impl: std::false_type {};
 		template<class It, class End>
-		auto is_citer_pair_impl(int) -> decltype(std::declval<End>() - std::declval<It>(), std::true_type());
-		template<class It, class End>
-		auto is_citer_pair_impl(...) -> std::false_type;
+		struct is_citer_pair_impl<It, End, decltype(void(std::declval<End>() - std::declval<It>()))>: std::true_type {};
 		template<class It, class End>
 		struct is_citer_pair: std::enable_if<
-				decltype(is_citer_impl<It>(0))::value &&
-				decltype(is_citer_pair_impl<It, End>(0))::value &&
+				is_citer_impl<It>::value &&
+				is_citer_pair_impl<It, End>::value &&
 				!std::is_convertible<End, size_t>::value,
 			int> {};
 
 		// checks that R is a contiguous, sized range, but not a span or std::array
+		template<class R, class = void>
+		struct is_range_impl: std::false_type {};
 		template<class R>
-		auto is_range_impl(int) -> decltype(std::declval<R>().data(), std::declval<R>().size(), std::true_type());
+		struct is_range_impl<R, decltype(void((std::declval<R>().data(), std::declval<R>().size())))>: std::true_type {};
 		template<class R>
-		auto is_range_impl(...) -> std::false_type;
-		template<class R>
-		struct is_range: std::enable_if<decltype(is_range_impl<R>(0))::value, int> {};
+		struct is_range: std::enable_if<is_range_impl<R>::value, int> {};
 		template<class ElementType, size_t Extent>
 		struct is_range<span<ElementType, Extent>> {};
 		template<class ElementType, size_t Extent>
