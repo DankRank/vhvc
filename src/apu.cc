@@ -447,7 +447,7 @@ void reg_write(uint16_t addr, uint8_t data) {
 		p.sweep_timer = data>>4 & 0x7;
 		p.sweep_timer_reload = true;
 		p.sweep_negate = data&0x08;
-		p.sweep_shift = data&3;
+		p.sweep_shift = data&7;
 		p.sweep_recalc();
 		break;
 	}
