@@ -282,21 +282,22 @@ struct DMC {
 		} else {
 			clock--;
 		}
-		if (enabled && !buffer_full && remaining) {
-			inspect_lock lk; // FIXME: actual DMA
-			buffer = cpu_read(cur_addr);
-			buffer_full = true;
-			cur_addr++;
-			cur_addr |= 0x8000;
-			if (--remaining == 0) {
-				if (loop || restart_pending) {
-					cur_addr = addr;
-					remaining = len;
-					restart_pending = false;
-				} else {
-					if (irq_enabled)
-						irq_raise(IRQ_DMC);
-				}
+		if (enabled && !buffer_full && remaining)
+			trigger_dmc_dma();
+	}
+	void dma_finish(uint8_t data) {
+		buffer = data;
+		buffer_full = true;
+		cur_addr++;
+		cur_addr |= 0x8000;
+		if (--remaining == 0) {
+			if (loop || restart_pending) {
+				cur_addr = addr;
+				remaining = len;
+				restart_pending = false;
+			} else {
+				if (irq_enabled)
+					irq_raise(IRQ_DMC);
 			}
 		}
 	}
@@ -305,6 +306,12 @@ struct DMC {
 	}
 };
 DMC dmc{};
+uint16_t dma_addr() {
+	return dmc.cur_addr;
+}
+void dma_finish(uint8_t data) {
+	dmc.dma_finish(data);
+}
 bool five_step = false;
 bool interrupt_inhibit = true;
 int frame_counter = 0;

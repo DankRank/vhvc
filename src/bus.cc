@@ -41,8 +41,24 @@ void bus_reset() {
 }
 uint8_t cpu_ram[2048] = {};
 uint32_t cpu_cycle = 0; // TODO: probably should be a part of APU
-bool oam_dma = false;
+bool in_dma = false;
+enum {
+	OAM_STATE_NONE = 0,
+	OAM_STATE_WAIT = 1,
+	OAM_STATE_READ = 2,
+	OAM_STATE_WRITE = 3,
+	DMC_STATE_NONE = 0,
+	DMC_STATE_WAIT = 1,
+	DMC_STATE_DUMMY = 2,
+	DMC_STATE_READ = 3,
+};
+int dmc_dma = DMC_STATE_NONE;
+int oam_dma = OAM_STATE_NONE;
 uint8_t oam_dma_page = 0;
+void trigger_dmc_dma() {
+	if (dmc_dma == DMC_STATE_NONE)
+		dmc_dma = DMC_STATE_WAIT;
+}
 uint8_t cpu_read_basic(uint16_t addr) {
 	// FIXME: perhaps it's better to add a separate cpu_tick mapper callback?
 	uint8_t mread = mapper->cpu_read(addr);
@@ -59,6 +75,8 @@ uint8_t cpu_read_basic(uint16_t addr) {
 	}
 	return mread;
 }
+#define IS_GET() (!(cpu_cycle & 1))
+#define IS_PUT() (cpu_cycle & 1)
 uint8_t cpu_read(uint16_t addr) {
 	uint8_t rv = cpu_read_basic(addr);
 	if (!bus_inspect) {
@@ -68,18 +86,64 @@ uint8_t cpu_read(uint16_t addr) {
 		ppu::do_cycle();
 		ppu::do_cycle();
 		apu::do_cycle();
-		if (oam_dma) {
-			// TODO: this will need to be adjusted for DMC DMA
-			oam_dma = false;
-			cpu::rdy_happened = true;
-			cpu_read(addr);
-			for (int i = 0; i < 256; i++) {
-				if (cpu_cycle & 1)
-					cpu_read(addr); // TODO: check what address is used for those reads
-				cpu_write(0x2004, cpu_read(oam_dma_page << 8 | i));
-			}
-		}
 		cpu_cycle++;
+		if (!in_dma && (oam_dma || dmc_dma)) {
+			in_dma = true;
+			cpu::rdy_happened = true;
+			uint8_t oam_lo = 0;
+			uint8_t oam_buf = 0;
+			if (dmc_dma == DMC_STATE_WAIT)
+				dmc_dma = DMC_STATE_DUMMY;
+			if (oam_dma == OAM_STATE_WAIT)
+				oam_dma = OAM_STATE_READ;
+			while (oam_dma || dmc_dma) {
+				bool cycle_used_up = false;
+				switch (dmc_dma) {
+				case DMC_STATE_WAIT:
+					dmc_dma = DMC_STATE_DUMMY;
+					break;
+				case DMC_STATE_DUMMY:
+					dmc_dma = DMC_STATE_READ;
+					break;
+				case DMC_STATE_READ:
+					if (IS_GET()) {
+						apu::dma_finish(cpu_read(apu::dma_addr()));
+						cycle_used_up = true;
+						dmc_dma = DMC_STATE_NONE;
+					}
+					break;
+				}
+				switch (oam_dma) {
+				case OAM_STATE_WAIT:
+					// OAM can't happen during DMC, so this is dead code.
+					oam_lo = 0;
+					oam_dma = OAM_STATE_READ;
+					break;
+				case OAM_STATE_READ:
+					if (!cycle_used_up && IS_GET()) {
+						oam_buf = cpu_read(oam_dma_page << 8 | oam_lo);
+						cycle_used_up = true;
+						oam_dma = OAM_STATE_WRITE;
+					}
+					break;
+				case OAM_STATE_WRITE:
+					if (!cycle_used_up && IS_PUT()) {
+						cpu_write(0x2004, oam_buf);
+						cycle_used_up = true;
+						if (++oam_lo == 0) {
+							oam_dma = OAM_STATE_NONE;
+						} else {
+							oam_dma = OAM_STATE_READ;
+						}
+					}
+					break;
+				}
+				if (!cycle_used_up)
+					cpu_read(addr);
+			}
+			rv = cpu_read(addr);
+			in_dma = false;
+		}
 	}
 	return rv;
 }
@@ -91,7 +155,7 @@ void cpu_write(uint16_t addr, uint8_t data) {
 	} else if ((addr & 0xFFE0) == 0x4000) {
 		apu::reg_write(addr, data);
 		if (addr == 0x4014) {
-			oam_dma = true;
+			oam_dma = OAM_STATE_WAIT;
 			oam_dma_page = data;
 		}
 		if (addr == 0x4016) {

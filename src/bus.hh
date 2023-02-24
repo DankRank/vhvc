@@ -25,6 +25,7 @@ namespace vhvc {
 	void bus_reset();
 
 	extern uint8_t cpu_ram[2048];
+	void trigger_dmc_dma();
 	uint8_t cpu_read(uint16_t addr);
 	void cpu_write(uint16_t addr, uint8_t data);
 	extern uint8_t ppu_ram[2048];
