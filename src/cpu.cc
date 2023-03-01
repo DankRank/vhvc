@@ -255,7 +255,7 @@ jam:
 		case 0x0B: [[fallthrough]]; // ANC #imm
 		case 0x2B: LOAD_IMM();  a &= val; SETNZ(a); C = N; break; // ANC #imm
 		case 0x4B: LOAD_IMM();  a &= val; LSR(a); break; // ALR imm
-		case 0x6B: LOAD_IMM();  a &= val; a = int(C) << 7 | a >> 1; C = a & 0x40; V = int(C) ^ a & 0x20; SETNZ(a); break; // ARR imm
+		case 0x6B: LOAD_IMM();  a &= val; a = int(C) << 7 | a >> 1; C = a & 0x40; V = (a>>1 ^ a) & 0x20; SETNZ(a); break; // ARR imm
 		case 0xCB: LOAD_IMM();  SBX(); break; // SBX imm
 		case 0xEB: LOAD_IMM();  SBC(); break; // SBC imm (unofficial)
 		case 0xBB: LOAD_ABi(y); a = x = s = val & s; SETNZ(a); break; // LAS aby
