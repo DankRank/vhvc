@@ -116,9 +116,9 @@ jam:
 	tmp = rdy_happened ? val : val & (b2+1); \
 	CIRQ(); \
 	if (b1 + index > 0xFF) \
-		WRITE((b2 << 8 | b1) + index & val<<8, tmp); \
+		WRITE((b2 << 8 | b1) + index & (val<<8|0xFF), tmp); \
 	else \
-		WRITE((b2 << 8 | b1) + index,          tmp); \
+		WRITE((b2 << 8 | b1) + index,                 tmp); \
 } while (0)
 #define UNSTABLESTORE_ABi(index) do { \
 	pc++; \
