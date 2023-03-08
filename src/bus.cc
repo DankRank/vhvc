@@ -16,6 +16,8 @@ void irq_raise(unsigned source) {
 				ppudebug::put_event(0xCC8888); break;
 			case IRQ_FRAMECOUNTER:
 				ppudebug::put_event(0x882222); break;
+			case IRQ_DISK:
+				ppudebug::put_event(0x882288); break;
 		}
 	}
 	cpu::irq |= source;

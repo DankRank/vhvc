@@ -6,6 +6,7 @@
 #include "bus.hh"
 #include "nesfile.hh"
 #include "nsffile.hh"
+#include "fdsfile.hh"
 #include "mapper.hh"
 #include "palette.hh"
 #include "audio.hh"
@@ -45,6 +46,10 @@ bool load_file(std::vector<uint8_t>& buf)
 		return load_nes(buf);
 	if (buf.size() > 0x80 && !memcmp(buf.data(), "NESM\032\001", 6))
 		return load_nsf(buf);
+	if (buf.size() >= 65500) {
+		if (!memcmp(buf.data(), "FDS\032", 4) || !memcmp(buf.data(), "\1*NINTENDO-HVC*", 15))
+			return load_fds(buf);
+	}
 	return false;
 }
 Uint32 event_console = 0;

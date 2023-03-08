@@ -16,7 +16,8 @@ namespace vhvc {
 	enum {
 		IRQ_FRAMECOUNTER = 1<<0,
 		IRQ_DMC = 1<<1,
-		IRQ_MAPPER = 1<<2
+		IRQ_MAPPER = 1<<2,
+		IRQ_DISK = 1<<3, // this exists just so I don't have to mux two interrupts in FdsMapper
 	};
 	void irq_raise(unsigned source);
 	void irq_ack(unsigned source);

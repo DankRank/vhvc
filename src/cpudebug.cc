@@ -171,12 +171,13 @@ void on_cycle() {
 }
 void on_intr() {
 	if (log_intr) {
-		printf("INTR: %3d,%3d %s%s%s%s%s%s%s\n",
+		printf("INTR: %3d,%3d %s%s%s%s%s%s%s%s\n",
 			ppu::line, ppu::dot,
 			cpu::irq ? " IRQ (" : "",
 			cpu::irq & IRQ_FRAMECOUNTER ? " FrameCounter" : "",
 			cpu::irq & IRQ_DMC ? " DMC" : "",
 			cpu::irq & IRQ_MAPPER ? " Mapper" : "",
+			cpu::irq & IRQ_DISK ? " Disk" : "",
 			cpu::irq ? " )" : "",
 			cpu::nmi ? " NMI" : "",
 			cpu::resetting ? " RESET" : "");
