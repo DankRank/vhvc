@@ -3,6 +3,7 @@
 namespace vhvc {
 struct NROM : BasicMapper {
 	void poweron() {
+		has_prgram = true; // for family basic
 		set_prg8k(0, nf->get_prg8k(0));
 		set_prg8k(1, nf->get_prg8k(1));
 		set_prg8k(2, nf->get_prg8k(2));
