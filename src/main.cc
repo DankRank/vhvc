@@ -24,6 +24,7 @@ SDL_Renderer* renderer = nullptr;
 bool is_running = true;
 bool show_demo_window = false;
 bool show_input_debug = false;
+bool show_famikey_debug = false;
 bool run_cpu = false;
 bool show_file_input = false;
 bool show_mapper_debug = false;
@@ -142,6 +143,8 @@ void events() {
 		ImGui::ShowDemoWindow(&show_demo_window);
 	if (show_input_debug)
 		input_debug(&show_input_debug);
+	if (show_famikey_debug)
+		famikey_debug(&show_famikey_debug);
 	cpudebug::gui();
 	ppudebug::gui();
 
@@ -228,6 +231,7 @@ void events() {
 		}
 		if (ImGui::BeginMenu("Tools")) {
 			ImGui::MenuItem("Joy debug", nullptr, &show_input_debug);
+			ImGui::MenuItem("Family Keyboard Debug", nullptr, &show_famikey_debug);
 			ImGui::MenuItem("Mapper Debug", nullptr, &show_mapper_debug);
 			if (ImGui::MenuItem("Dump Audio", nullptr, !!apu::dump_file))
 				apu::dump_file = apu::dump_file ? File() : File::fromFile("apudump.bin", "wb");
@@ -333,6 +337,13 @@ int main(int argc, char** argv)
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImGui::StyleColorsDark();
+		ImGuiIO& io = ImGui::GetIO();
+		io.Fonts->AddFontDefault();
+		ImFontConfig config;
+		config.MergeMode = true;
+		if (File::fromFile("NotoSansCJKjp-Regular.otf", "rb"))
+			io.Fonts->AddFontFromFileTTF("NotoSansCJKjp-Regular.otf", 13.0f, &config, io.Fonts->GetGlyphRangesJapanese());
+		io.Fonts->Build();
 		ImGui_ImplSDL2_InitForSDLRenderer(window);
 		ImGui_ImplSDLRenderer_Init(renderer);
 	}

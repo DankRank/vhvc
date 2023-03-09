@@ -1,5 +1,6 @@
 #include "input.hh"
 #include "imgui.h"
+#include "imgui_internal.h" /* for ArrowButtonEx */
 namespace vhvc {
 
 // Family BASIC Keyboard
@@ -119,7 +120,131 @@ static uint8_t famikey_read() {
 		cols >>= 4;
 	return ~cols<<1 & 0x1E;
 }
+void famikey_debug(bool* p_open) {
+	if (ImGui::Begin("Family Keyboard Debug", p_open)) {
+		constexpr int u = 15*4;
+		ImVec2 pad = ImGui::GetStyle().FramePadding;
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 
+		auto key = [&](int row, int col, const char *name, int w=0, ImGuiDir dir = ImGuiDir_None) {
+			if (famikey_state[row] & 1<<col) {
+				ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(.0f, .6f, .6f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(.0f, .7f, .7f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(.0f, .8f, .8f));
+			}
+			if (dir == ImGuiDir_None)
+				ImGui::Button(name, ImVec2((u<<w)-2*pad.x, u-2*pad.y));
+			else
+				ImGui::ArrowButtonEx(name, dir, ImVec2((u<<w)-2*pad.x, u-2*pad.y), ImGuiButtonFlags_None);
+			ImGui::SameLine();
+			if (famikey_state[row] & 1<<col)
+				ImGui::PopStyleColor(3);
+		};
+		auto shiftx = [](float x) {
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + x*u);
+		};
+		auto shifty = [](float y) {
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + y*u);
+		};
+		shiftx(.25f);
+		key(7, 0, "Ｆ１", 1);
+		key(6, 0, "Ｆ２", 1);
+		key(5, 0, "Ｆ３", 1);
+		key(4, 0, "Ｆ４", 1);
+		key(3, 0, "Ｆ５", 1);
+		key(2, 0, "Ｆ６", 1);
+		key(1, 0, "Ｆ７", 1);
+		key(0, 0, "Ｆ８", 1);
+		ImGui::NewLine(); ImGui::Spacing();
+		shiftx(.75f);
+		key(7, 6, "　！　\n１　ァ\n　ア　");
+		key(7, 7, "　＂　\n２　ィ\n　イ　");
+		key(6, 7, "　＃　\n３　ゥ\n　ウ　");
+		key(5, 7, "　＄　\n４　ェ\n　エ　");
+		key(5, 6, "　％　\n５　ォ\n　オ　");
+		key(4, 7, "　＆　\n６　　\n　ナ　");
+		key(4, 6, "　＇　\n７　　\n　ニ　");
+		key(3, 7, "　（　\n８　　\n　ヌ　");
+		key(3, 6, "　）　\n９　　\n　ネ　");
+		key(2, 7, "　　　\n０　　\n　ノ　");
+		key(1, 6, "　＝　\n－　　\n　ラ　");
+		key(1, 7, "　　　\n＾　　\n　リ　");
+		key(0, 6, "　　　\n￥　　\n　ル　");
+		key(0, 7, "ＳＴＯＰ");
+		shiftx(1.f);
+		shifty(.5f);
+		key(8, 0, " ＣＬＳ\nＨＯＭＥ");
+		key(8, 7, "ＩＮＳ");
+		key(8, 6, "ＤＥＬ");
+		shifty(-.5f);
+		ImGui::NewLine(); ImGui::Spacing();
+		shiftx(.25f);
+		key(7, 1, "ＥＳＣ");
+		key(7, 2, "　　　\nＱ　　\n　カ　");
+		key(6, 1, "　　　\nＷ　　\n　キ　");
+		key(6, 6, "　　　\nＥ　　\n　ク　");
+		key(5, 2, "　　　\nＲ　　\n　ケ　");
+		key(5, 1, "　　　\nＴ　　\n　コ　");
+		key(4, 1, "　　　\nＹ　パ\n　ハ　");
+		key(3, 2, "　　　\nＵ　ピ\n　ヒ　");
+		key(3, 1, "　　　\nＩ　プ\n　フ　");
+		key(2, 1, "　　　\nＯ　ペ\n　ヘ　");
+		key(2, 6, "　　　\nＰ　ポ\n　ホ　");
+		key(1, 1, "　　　\n＠　　\n　レ　");
+		key(0, 2, "　　　\n［　「\n　ロ　");
+		key(0, 1, "ＲＥＴＵＲＮ", 1);
+		shiftx(1.f);
+		shifty(.5f);
+		key(8, 1, "##up", 1, ImGuiDir_Up);
+		shifty(-.5f);
+		ImGui::NewLine(); ImGui::Spacing();
+		shiftx(.5f);
+		key(7, 3, "ＣＴＲ");
+		key(6, 3, "　　　\nＡ　　\n　サ　");
+		key(6, 2, "　　　\nＳ　　\n　シ　");
+		key(5, 3, "　　　\nＤ　　\n　ス　");
+		key(5, 4, "　　　\nＦ　　\n　セ　");
+		key(4, 2, "　　　\nＧ　　\n　ソ　");
+		key(4, 3, "　　　\nＨ　　\n　マ　");
+		key(3, 3, "　　　\nＪ　　\n　ミ　");
+		key(2, 3, "　　　\nＫ　　\n　ム　");
+		key(2, 2, "　　　\nＬ　　\n　メ　");
+		key(1, 3, "　＋　\n；　　\n　モ　");
+		key(1, 2, "　＊　\n：　　\n　ー　");
+		key(0, 3, "　　　\n［　」\n　。　");
+		key(0, 4, "カナ");
+		shiftx(.75f);
+		shifty(.5f);
+		key(8, 3, "##left", 1, ImGuiDir_Left);
+		key(8, 2, "##right", 1, ImGuiDir_Right);
+		shifty(-.5f);
+		ImGui::NewLine(); ImGui::Spacing();
+		key(7, 4, "ＳＨＩＦＴ##left", 1);
+		key(6, 5, "　　　\nＺ　　\n　タ　");
+		key(6, 4, "　　　\nＸ　　\n　チ　");
+		key(5, 5, "　　　\nＣ　ッ\n　ツ　");
+		key(4, 5, "　　　\nＶ　　\n　テ　");
+		key(4, 4, "　　　\nＢ　　\n　ト　");
+		key(3, 5, "　　　\nＮ　ャ\n　ヤ　");
+		key(3, 4, "　　　\nＭ　ュ\n　ユ　");
+		key(2, 5, "　＜　\n，　ョ\n　ヨ　");
+		key(2, 4, "　＞　\n．　　\n　ワ　");
+		key(1, 5, "　？　\n／　　\n　ヲ　");
+		key(1, 4, "　＿　\n　　　\n　ン　");
+		key(0, 5, "ＳＨＩＦＴ##right", 1);
+		shiftx(1.25f);
+		shifty(.5f);
+		key(8, 4, "##down", 1, ImGuiDir_Down);
+		shifty(-.5f);
+		ImGui::NewLine(); ImGui::Spacing();
+		shiftx(3.f);
+		key(7, 5, "ＧＲＰＨ");
+		key(8, 5, "##space", 3);
+		ImGui::NewLine(); ImGui::Spacing();
+		ImGui::PopStyleVar();
+	}
+	ImGui::End();
+}
 struct Joy joy1 = {};
 struct Joy joy2 = {};
 static uint8_t kbd_state = 0;
