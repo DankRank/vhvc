@@ -140,10 +140,10 @@ void famikey_debug(bool* p_open) {
 			if (famikey_state[row] & 1<<col)
 				ImGui::PopStyleColor(3);
 		};
-		auto shiftx = [](float x) {
+		auto shiftx = [&](float x) {
 			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + x*u);
 		};
-		auto shifty = [](float y) {
+		auto shifty = [&](float y) {
 			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + y*u);
 		};
 		shiftx(.25f);

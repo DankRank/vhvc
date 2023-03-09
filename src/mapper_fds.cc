@@ -107,7 +107,7 @@ struct FdsMapper : Mapper {
 		}
 		switch (addr) {
 		case 0x4030: {
-			uint8_t r = irq_status(IRQ_DISK)<<1 | irq_status(IRQ_MAPPER);
+			uint8_t r = (int)irq_status(IRQ_DISK)<<1 | (int)irq_status(IRQ_MAPPER);
 			if (!bus_inspect) {
 				irq_ack(IRQ_MAPPER);
 				irq_ack(IRQ_DISK);
