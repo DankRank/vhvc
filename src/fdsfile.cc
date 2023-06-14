@@ -24,7 +24,7 @@ FdsFile::FdsFile(std::vector<uint8_t>&& buf) :image(buf) {
 		isQD = true;
 	else if (sp.size()%65500 == 16)
 		sp = sp.subspan(16);
-	else if (sp.size()%65500 == 16)
+	else if (sp.size()%65500 != 0)
 		return;
 	int crc_len = isQD ? 2 : 0;
 	int side_size = isQD ? 65536 : 65500;
