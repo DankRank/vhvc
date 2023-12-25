@@ -36,7 +36,7 @@ add_executable(vhvc
 target_link_libraries(vhvc PRIVATE SDL2::SDL2 SDL2::SDL2main imgui)
 target_compile_features(vhvc PRIVATE cxx_std_17)
 if(MSVC)
-	target_compile_options(vhvc PRIVATE /Zc:__cplusplus /D_CRT_SECURE_NO_WARNINGS /W3 /wd4267 /wd4244)
+	target_compile_options(vhvc PRIVATE /Zc:__cplusplus /D_CRT_SECURE_NO_WARNINGS /W3 /wd4267 /wd4244 /utf-8)
 else()
 	target_compile_options(vhvc PRIVATE -Wall -Wextra -Wno-parentheses)
 endif()
